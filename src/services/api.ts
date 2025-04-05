@@ -43,6 +43,21 @@ const fetchWithTimeout = async (url: string, options: RequestInit = {}, timeout 
   }
 };
 
+// Add a mock database for storing active check-ins and surfer counts
+let activeSurferCounts: Record<string, number> = {
+  'stonypoint': 3,
+  'parkpoint': 5,
+  'lesterriver': 2,
+  'superiorentry': 0,
+};
+
+let activeCheckIns: Record<string, CheckIn[]> = {
+  'stonypoint': [],
+  'parkpoint': [],
+  'lesterriver': [],
+  'superiorentry': [],
+};
+
 /**
  * Fetches current surf conditions for a specific spot
  * This is a mock implementation that would be replaced with actual API calls
@@ -286,15 +301,7 @@ export const getSurferCount = async (spotId: string): Promise<number> => {
     await new Promise(resolve => setTimeout(resolve, 500));
     
     // In a real implementation, this would query active check-ins
-    // For now, just return mock data based on spot ID
-    const mockCounts: Record<string, number> = {
-      'stonypoint': 3,
-      'parkpoint': 5,
-      'lesterriver': 2,
-      'superiorentry': 0,
-    };
-    
-    return mockCounts[spotId] || 0;
+    return activeSurferCounts[spotId] || 0;
   } catch (error) {
     console.error('Error getting surfer count:', error);
     return 0;
@@ -314,9 +321,6 @@ export const checkInToSpot = async (
     // Simulate API latency
     await new Promise(resolve => setTimeout(resolve, 1000));
     
-    // In a real implementation, this would create a check-in record
-    // and update the surfer count for the spot
-    
     // Calculate expiration time (2 hours from now by default)
     const now = new Date();
     const expiresAt = new Date(now.getTime() + 2 * 60 * 60 * 1000).toISOString();
@@ -332,6 +336,18 @@ export const checkInToSpot = async (
       comment: data?.comment,
       imageUrls: data?.imageUrls,
     };
+    
+    // Add to active check-ins
+    if (!activeCheckIns[spotId]) {
+      activeCheckIns[spotId] = [];
+    }
+    activeCheckIns[spotId].push(checkIn);
+    
+    // Increment surfer count
+    if (!activeSurferCounts[spotId]) {
+      activeSurferCounts[spotId] = 0;
+    }
+    activeSurferCounts[spotId]++;
     
     return checkIn;
   } catch (error) {
@@ -349,10 +365,30 @@ export const checkOutFromSpot = async (checkInId: string): Promise<boolean> => {
     // Simulate API latency
     await new Promise(resolve => setTimeout(resolve, 800));
     
-    // In a real implementation, this would update the check-in record
-    // and decrement the surfer count for the spot
+    // Find the check-in
+    let foundSpotId: string | null = null;
+    let foundCheckIn: CheckIn | null = null;
     
-    return true;
+    for (const spotId in activeCheckIns) {
+      const checkInIndex = activeCheckIns[spotId].findIndex(checkin => checkin.id === checkInId);
+      if (checkInIndex >= 0) {
+        foundSpotId = spotId;
+        foundCheckIn = activeCheckIns[spotId][checkInIndex];
+        // Remove from active check-ins
+        activeCheckIns[spotId].splice(checkInIndex, 1);
+        break;
+      }
+    }
+    
+    if (foundSpotId && foundCheckIn) {
+      // Decrement surfer count
+      if (activeSurferCounts[foundSpotId] > 0) {
+        activeSurferCounts[foundSpotId]--;
+      }
+      return true;
+    }
+    
+    return false;
   } catch (error) {
     console.error('Error checking out from spot:', error);
     return false;

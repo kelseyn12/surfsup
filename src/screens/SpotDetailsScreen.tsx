@@ -78,6 +78,8 @@ const SpotDetailsScreen: React.FC = () => {
             // Update surfer count (decrement)
             const newCount = await getSurferCount(spotId);
             setSurferCount(newCount);
+            // Refresh conditions to update UI with new surfer count
+            loadData();
             Alert.alert('Success', 'You have checked out from this spot!');
           } else {
             Alert.alert('Error', 'Failed to check out. Please try again.');
@@ -103,6 +105,8 @@ const SpotDetailsScreen: React.FC = () => {
           // Update surfer count (increment)
           const newCount = await getSurferCount(spotId);
           setSurferCount(newCount);
+          // Refresh conditions to update UI with new surfer count
+          loadData();
           Alert.alert('Success', 'You have checked in to this spot!');
         } else {
           Alert.alert('Error', 'Failed to check in. Please try again.');

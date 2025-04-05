@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { MainTabScreenProps } from '../navigation/types';
 import { COLORS } from '../constants';
@@ -24,9 +24,21 @@ const MapScreen: React.FC = () => {
     longitudeDelta: 0.5,
   });
 
+  // Load spots when component mounts
   useEffect(() => {
     loadSurfSpots();
   }, []);
+
+  // Refresh spots when screen comes into focus (e.g., after check-in/check-out)
+  useFocusEffect(
+    React.useCallback(() => {
+      // Only reload if we've previously loaded spots
+      if (surfSpots.length > 0) {
+        loadSurfSpots();
+      }
+      return () => {};
+    }, [surfSpots.length])
+  );
 
   const loadSurfSpots = async () => {
     setIsLoading(true);
