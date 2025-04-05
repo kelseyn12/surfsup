@@ -45,12 +45,13 @@ const fetchWithTimeout = async (url: string, options: RequestInit = {}, timeout 
 
 // Add a mock database for storing active check-ins and surfer counts
 let activeSurferCounts: Record<string, number> = {
-  'stonypoint': 3,
-  'parkpoint': 5,
-  'lesterriver': 2,
+  'stonypoint': 0,
+  'parkpoint': 0,
+  'lesterriver': 0,
   'superiorentry': 0,
 };
 
+// Initialize with empty arrays for all spots to avoid undefined
 let activeCheckIns: Record<string, CheckIn[]> = {
   'stonypoint': [],
   'parkpoint': [],
@@ -215,7 +216,7 @@ export const fetchNearbySurfSpots = async (
         amenities: ['parking'],
         description: 'Popular spot for Lake Superior surfers with consistent waves during NE winds.',
         imageUrls: ['https://example.com/stonypoint.jpg'],
-        currentSurferCount: 3,
+        currentSurferCount: activeSurferCounts['stonypoint'] || 0, // Use the shared surfer count value
         lastActivityUpdate: new Date().toISOString(),
         createdAt: '2023-01-15T00:00:00.000Z',
         updatedAt: '2023-01-15T00:00:00.000Z',
@@ -235,7 +236,7 @@ export const fetchNearbySurfSpots = async (
         amenities: ['parking', 'restrooms'],
         description: 'Long sandy beach with gentle waves, perfect for beginners during calm conditions.',
         imageUrls: ['https://example.com/parkpoint.jpg'],
-        currentSurferCount: 5,
+        currentSurferCount: activeSurferCounts['parkpoint'] || 0, // Use the shared surfer count value
         lastActivityUpdate: new Date().toISOString(),
         createdAt: '2023-01-15T00:00:00.000Z',
         updatedAt: '2023-01-15T00:00:00.000Z',
@@ -255,7 +256,7 @@ export const fetchNearbySurfSpots = async (
         amenities: ['parking'],
         description: 'River mouth break that works well during strong winds and storms.',
         imageUrls: ['https://example.com/lesterriver.jpg'],
-        currentSurferCount: 2,
+        currentSurferCount: activeSurferCounts['lesterriver'] || 0, // Use the shared surfer count value
         lastActivityUpdate: new Date().toISOString(),
         createdAt: '2023-01-15T00:00:00.000Z',
         updatedAt: '2023-01-15T00:00:00.000Z',
@@ -275,7 +276,7 @@ export const fetchNearbySurfSpots = async (
         amenities: ['parking'],
         description: 'Powerful break near the canal entrance. For experienced surfers only.',
         imageUrls: ['https://example.com/superiorentry.jpg'],
-        currentSurferCount: 0,
+        currentSurferCount: activeSurferCounts['superiorentry'] || 0, // Use the shared surfer count value
         lastActivityUpdate: new Date().toISOString(),
         createdAt: '2023-01-15T00:00:00.000Z',
         updatedAt: '2023-01-15T00:00:00.000Z',
@@ -299,6 +300,8 @@ export const getSurferCount = async (spotId: string): Promise<number> => {
   try {
     // Simulate API latency
     await new Promise(resolve => setTimeout(resolve, 500));
+    
+    console.log(`[DEBUG] Getting surfer count for ${spotId}:`, activeSurferCounts[spotId] || 0);
     
     // In a real implementation, this would query active check-ins
     return activeSurferCounts[spotId] || 0;
@@ -349,6 +352,9 @@ export const checkInToSpot = async (
     }
     activeSurferCounts[spotId]++;
     
+    console.log(`[DEBUG] User ${userId} checked in at ${spotId}. Current check-ins:`, activeCheckIns);
+    console.log(`[DEBUG] Updated surfer counts:`, activeSurferCounts);
+    
     return checkIn;
   } catch (error) {
     console.error('Error checking in to spot:', error);
@@ -364,6 +370,9 @@ export const checkOutFromSpot = async (checkInId: string): Promise<boolean> => {
   try {
     // Simulate API latency
     await new Promise(resolve => setTimeout(resolve, 800));
+    
+    console.log(`[DEBUG] Checking out with ID: ${checkInId}`);
+    console.log(`[DEBUG] Current check-ins before checkout:`, activeCheckIns);
     
     // Find the check-in
     let foundSpotId: string | null = null;
@@ -385,9 +394,14 @@ export const checkOutFromSpot = async (checkInId: string): Promise<boolean> => {
       if (activeSurferCounts[foundSpotId] > 0) {
         activeSurferCounts[foundSpotId]--;
       }
+      
+      console.log(`[DEBUG] Successfully checked out from ${foundSpotId}. Updated check-ins:`, activeCheckIns);
+      console.log(`[DEBUG] Updated surfer counts:`, activeSurferCounts);
+      
       return true;
     }
     
+    console.log(`[DEBUG] Check-in not found for ID: ${checkInId}`);
     return false;
   } catch (error) {
     console.error('Error checking out from spot:', error);
@@ -493,4 +507,38 @@ export const getActiveCheckInForUser = async (
     console.error('Error getting active check-in:', error);
     return null;
   }
-}; 
+};
+
+/**
+ * Get active check-in for a user at any spot
+ * This is used to prevent a user from being checked in at multiple spots
+ */
+export const getActiveCheckInForUserAnywhere = async (
+  userId: string
+): Promise<CheckIn | null> => {
+  try {
+    // Simulate API latency
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    // Check all spots for an active check-in by this user
+    for (const spotId in activeCheckIns) {
+      const checkIn = activeCheckIns[spotId].find(
+        checkin => checkin.userId === userId && checkin.isActive
+      );
+      
+      if (checkIn) {
+        return checkIn;
+      }
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('Error getting active check-in anywhere:', error);
+    return null;
+  }
+};
+
+/**
+ * Import the fetchNearbySurfSpots function to allow the SpotDetailsScreen to use it
+ */
+export { fetchNearbySurfSpots }; 

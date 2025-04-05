@@ -9,12 +9,12 @@ import {
   Alert,
   ActivityIndicator
 } from 'react-native';
-import { useRoute, useNavigation } from '@react-navigation/native';
+import { useRoute, useNavigation, useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { RootStackScreenProps } from '../navigation/types';
 import { COLORS } from '../constants';
 import { SurfConditions } from '../types';
-import { fetchSurfConditions, fetchSurfForecast, checkInToSpot, checkOutFromSpot, getSurferCount, getActiveCheckInForUser, getActiveCheckInForUserAnywhere } from '../services/api';
+import { fetchSurfConditions, fetchSurfForecast, checkInToSpot, checkOutFromSpot, getSurferCount, getActiveCheckInForUser, getActiveCheckInForUserAnywhere, fetchNearbySurfSpots } from '../services/api';
 
 const SpotDetailsScreen: React.FC = () => {
   const route = useRoute<RootStackScreenProps<'SpotDetails'>['route']>();
@@ -35,6 +35,15 @@ const SpotDetailsScreen: React.FC = () => {
     loadData();
     checkExistingCheckIn();
   }, [spotId]);
+  
+  // Re-check user's check-in status when the screen comes into focus
+  useFocusEffect(
+    React.useCallback(() => {
+      console.log(`[DEBUG] Screen focused for spot ${spotId}, checking check-in status`);
+      checkExistingCheckIn();
+      return () => {};
+    }, [spotId])
+  );
 
   const loadData = async () => {
     setIsLoading(true);
@@ -67,13 +76,20 @@ const SpotDetailsScreen: React.FC = () => {
       
       // Only check for check-ins at THIS spot
       const activeCheckIn = await getActiveCheckInForUser(userId, spotId);
+      console.log(`[DEBUG] Checking for check-in at spot ${spotId}:`, activeCheckIn);
+      
+      // Also check if checked in anywhere (for debugging)
+      const anywhereCheckIn = await getActiveCheckInForUserAnywhere(userId);
+      console.log(`[DEBUG] Checking for check-in anywhere:`, anywhereCheckIn);
       
       if (activeCheckIn) {
         // User is checked in at this spot
+        console.log(`[DEBUG] User is checked in at THIS spot`);
         setIsCheckedIn(true);
         setCheckInId(activeCheckIn.id);
       } else {
         // User is not checked in at this spot
+        console.log(`[DEBUG] User is NOT checked in at THIS spot`);
         setIsCheckedIn(false);
         setCheckInId(null);
       }

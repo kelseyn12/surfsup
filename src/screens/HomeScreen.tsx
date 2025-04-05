@@ -5,7 +5,7 @@ import { MainTabScreenProps } from '../navigation/types';
 import { COLORS } from '../constants';
 import { SurfSpotCard } from '../components';
 import { SurfSpot } from '../types';
-import { fetchNearbySurfSpots } from '../services/api';
+import { fetchNearbySurfSpots, getSurferCount } from '../services/api';
 
 const HomeScreen: React.FC = () => {
   const navigation = useNavigation<MainTabScreenProps<'Home'>['navigation']>();
@@ -34,6 +34,12 @@ const HomeScreen: React.FC = () => {
       // Using a fixed location for Lake Superior near Duluth
       const spots = await fetchNearbySurfSpots(46.7825, -92.0856);
       if (spots) {
+        // Make sure each spot shows the latest surfer count
+        for (const spot of spots) {
+          // Fetch the latest count for each spot
+          const latestCount = await getSurferCount(spot.id);
+          spot.currentSurferCount = latestCount;
+        }
         setNearbySpots(spots);
       }
     } catch (error) {
