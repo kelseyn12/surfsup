@@ -1,8 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
 import { MainTabScreenProps } from '../navigation/types';
 import { COLORS } from '../constants';
+import { SurfSpot } from '../types';
+import { fetchNearbySurfSpots } from '../services/api';
 
 // In a full implementation, we would import and use a map component like:
 // import MapView, { Marker, Region, PROVIDER_GOOGLE } from 'react-native-maps';
@@ -11,6 +14,7 @@ import { COLORS } from '../constants';
 const MapScreen: React.FC = () => {
   const navigation = useNavigation<MainTabScreenProps<'Map'>['navigation']>();
   const [isLoading, setIsLoading] = useState(false);
+  const [surfSpots, setSurfSpots] = useState<SurfSpot[]>([]);
 
   // Placeholder for map region state - centered on Lake Superior near Duluth
   const [region, setRegion] = useState({
@@ -20,14 +24,23 @@ const MapScreen: React.FC = () => {
     longitudeDelta: 0.5,
   });
 
-  // Mock data for surf spots on Lake Superior
-  const surfSpots = [
-    { id: '1', name: 'Stoney Point', latitude: 46.9463, longitude: -91.8944, rating: 'Good' },
-    { id: '2', name: 'Park Point', latitude: 46.7616, longitude: -92.0593, rating: 'Fair' },
-    { id: '3', name: 'Lester River', latitude: 46.8330, longitude: -92.0070, rating: 'Excellent' },
-    { id: '4', name: 'Brighton Beach', latitude: 46.8450, longitude: -92.0024, rating: 'Good' },
-    { id: '5', name: 'The Cribs', latitude: 46.8049, longitude: -91.9949, rating: 'Fair' },
-  ];
+  useEffect(() => {
+    loadSurfSpots();
+  }, []);
+
+  const loadSurfSpots = async () => {
+    setIsLoading(true);
+    try {
+      const spots = await fetchNearbySurfSpots(region.latitude, region.longitude);
+      if (spots) {
+        setSurfSpots(spots);
+      }
+    } catch (error) {
+      console.error('Error loading surf spots:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Placeholder function for finding user's location
   const findMyLocation = () => {
@@ -40,13 +53,30 @@ const MapScreen: React.FC = () => {
         latitudeDelta: 0.5,
         longitudeDelta: 0.5,
       });
-      setIsLoading(false);
+      // Reload surf spots with new location
+      loadSurfSpots();
     }, 1000);
   };
 
+  // Function to get color based on surfer count
+  const getSurferCountColor = (count: number): string => {
+    if (count === 0) return COLORS.gray;
+    if (count < 3) return COLORS.success;
+    if (count < 8) return COLORS.warning;
+    return COLORS.error;
+  };
+
+  // Function to get label for surfer activity level
+  const getSurferActivityLabel = (count: number): string => {
+    if (count === 0) return 'No surfers';
+    if (count < 3) return 'Low';
+    if (count < 8) return 'Active';
+    return 'Crowded';
+  };
+
   // Placeholder for handling marker press
-  const handleMarkerPress = (spotId: string, spotName: string) => {
-    navigation.navigate('SpotDetails', { spotId, spot: { name: spotName } });
+  const handleMarkerPress = (spot: SurfSpot) => {
+    navigation.navigate('SpotDetails', { spotId: spot.id, spot });
   };
 
   return (
@@ -65,19 +95,30 @@ const MapScreen: React.FC = () => {
             style={[
               styles.markerPlaceholder,
               {
-                backgroundColor: 
-                  spot.rating === 'Excellent' 
-                    ? COLORS.surfConditions.excellent 
-                    : spot.rating === 'Good' 
-                      ? COLORS.surfConditions.good 
-                      : COLORS.surfConditions.fair,
                 top: Math.random() * 200 + 100,
                 left: Math.random() * 200 + 75,
               }
             ]}
-            onPress={() => handleMarkerPress(spot.id, spot.name)}
+            onPress={() => handleMarkerPress(spot)}
           >
-            <Text style={styles.markerText}>{spot.name}</Text>
+            <View style={styles.markerContent}>
+              <Text style={styles.markerText}>{spot.name}</Text>
+              <View style={[
+                styles.surferCountBadge, 
+                { backgroundColor: getSurferCountColor(spot.currentSurferCount || 0) }
+              ]}>
+                <Text style={styles.surferCountText}>{spot.currentSurferCount || 0}</Text>
+                <Ionicons name="people" size={12} color={COLORS.white} />
+              </View>
+            </View>
+            <View style={[
+              styles.surferActivityBadge,
+              { backgroundColor: getSurferCountColor(spot.currentSurferCount || 0) }
+            ]}>
+              <Text style={styles.surferActivityText}>
+                {getSurferActivityLabel(spot.currentSurferCount || 0)}
+              </Text>
+            </View>
           </TouchableOpacity>
         ))}
       </View>
@@ -93,6 +134,18 @@ const MapScreen: React.FC = () => {
             <ActivityIndicator size="small" color={COLORS.white} />
           ) : (
             <Text style={styles.controlButtonText}>Find My Location</Text>
+          )}
+        </TouchableOpacity>
+
+        <TouchableOpacity 
+          style={[styles.controlButton, styles.refreshButton]}
+          onPress={loadSurfSpots}
+          disabled={isLoading}
+        >
+          {isLoading ? (
+            <ActivityIndicator size="small" color={COLORS.white} />
+          ) : (
+            <Text style={styles.controlButtonText}>Refresh</Text>
           )}
         </TouchableOpacity>
       </View>
@@ -129,15 +182,53 @@ const styles = StyleSheet.create({
     padding: 8,
     borderRadius: 8,
     margin: 4,
+    backgroundColor: COLORS.white,
+    shadowColor: COLORS.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  markerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
   markerText: {
+    color: COLORS.text.primary,
+    fontWeight: 'bold',
+    marginRight: 8,
+  },
+  surferCountBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+    borderRadius: 10,
+  },
+  surferCountText: {
     color: COLORS.white,
     fontWeight: 'bold',
+    fontSize: 12,
+    marginRight: 3,
+  },
+  surferActivityBadge: {
+    marginTop: 4,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    alignSelf: 'flex-start',
+  },
+  surferActivityText: {
+    color: COLORS.white,
+    fontWeight: 'bold',
+    fontSize: 10,
   },
   controls: {
     position: 'absolute',
     bottom: 20,
     alignSelf: 'center',
+    flexDirection: 'row',
   },
   controlButton: {
     backgroundColor: COLORS.primary,
@@ -149,6 +240,10 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
+    marginHorizontal: 5,
+  },
+  refreshButton: {
+    backgroundColor: COLORS.secondary,
   },
   controlButtonText: {
     color: COLORS.white,
