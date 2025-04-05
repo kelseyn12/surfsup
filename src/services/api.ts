@@ -1,6 +1,11 @@
 import { API, TIMEOUTS } from '../constants';
 import { SurfConditions, SurfSpot, WindyApiResponse, NoaaApiResponse, NdbcBuoyResponse, CheckIn } from '../types';
 import { emitSurferCountUpdated, emitCheckInStatusChanged } from './events';
+import { 
+  globalSurferCounts, 
+  updateGlobalSurferCount, 
+  updateUserCheckedInStatus 
+} from './globalState';
 
 /**
  * API Service
@@ -60,10 +65,18 @@ let activeCheckIns: Record<string, CheckIn[]> = {
   'superiorentry': [],
 };
 
+// Initialize the global state with our initial data
+Object.keys(activeSurferCounts).forEach(spotId => {
+  updateGlobalSurferCount(spotId, activeSurferCounts[spotId]);
+});
+
 // Function to update a spot's surfer count and emit the event
 const updateSurferCount = (spotId: string, count: number) => {
-  // Update the count
+  // Update the local count
   activeSurferCounts[spotId] = count;
+  
+  // Update the global state
+  updateGlobalSurferCount(spotId, count);
   
   // Emit the event
   console.log(`[DEBUG] Broadcasting surfer count update for ${spotId}: ${count}`);
@@ -207,11 +220,8 @@ export const fetchNearbySurfSpots = async (
     // Simulate API latency
     await new Promise(resolve => setTimeout(resolve, 800));
     
-    // In a real implementation, this would query a database
-    // or external API for spots near the provided coordinates
-    
     // Force refresh the latest counts before returning spots
-    console.log('[DEBUG] Current active surfer counts before returning spots:', activeSurferCounts);
+    console.log('[DEBUG] Current active surfer counts before returning spots:', globalSurferCounts);
     
     // Mock data for Lake Superior spots
     const lakeSuperiorSpots: SurfSpot[] = [
@@ -230,7 +240,7 @@ export const fetchNearbySurfSpots = async (
         amenities: ['parking'],
         description: 'Popular spot for Lake Superior surfers with consistent waves during NE winds.',
         imageUrls: ['https://example.com/stonypoint.jpg'],
-        currentSurferCount: activeSurferCounts['stonypoint'],
+        currentSurferCount: globalSurferCounts['stonypoint'],
         lastActivityUpdate: new Date().toISOString(),
         createdAt: '2023-01-15T00:00:00.000Z',
         updatedAt: '2023-01-15T00:00:00.000Z',
@@ -250,7 +260,7 @@ export const fetchNearbySurfSpots = async (
         amenities: ['parking', 'restrooms'],
         description: 'Long sandy beach with gentle waves, perfect for beginners during calm conditions.',
         imageUrls: ['https://example.com/parkpoint.jpg'],
-        currentSurferCount: activeSurferCounts['parkpoint'],
+        currentSurferCount: globalSurferCounts['parkpoint'],
         lastActivityUpdate: new Date().toISOString(),
         createdAt: '2023-01-15T00:00:00.000Z',
         updatedAt: '2023-01-15T00:00:00.000Z',
@@ -270,7 +280,7 @@ export const fetchNearbySurfSpots = async (
         amenities: ['parking'],
         description: 'River mouth break that works well during strong winds and storms.',
         imageUrls: ['https://example.com/lesterriver.jpg'],
-        currentSurferCount: activeSurferCounts['lesterriver'],
+        currentSurferCount: globalSurferCounts['lesterriver'],
         lastActivityUpdate: new Date().toISOString(),
         createdAt: '2023-01-15T00:00:00.000Z',
         updatedAt: '2023-01-15T00:00:00.000Z',
@@ -290,7 +300,7 @@ export const fetchNearbySurfSpots = async (
         amenities: ['parking'],
         description: 'Powerful break near the canal entrance. For experienced surfers only.',
         imageUrls: ['https://example.com/superiorentry.jpg'],
-        currentSurferCount: activeSurferCounts['superiorentry'],
+        currentSurferCount: globalSurferCounts['superiorentry'],
         lastActivityUpdate: new Date().toISOString(),
         createdAt: '2023-01-15T00:00:00.000Z',
         updatedAt: '2023-01-15T00:00:00.000Z',
@@ -300,8 +310,6 @@ export const fetchNearbySurfSpots = async (
     console.log('[DEBUG] Returning spots with counts:', 
       lakeSuperiorSpots.map(spot => `${spot.name}: ${spot.currentSurferCount}`).join(', '));
     
-    // Return all spots for this mock implementation
-    // In a real app, we would filter based on distance from provided coordinates
     return lakeSuperiorSpots;
   } catch (error) {
     console.error('Error fetching nearby surf spots:', error);
@@ -318,15 +326,17 @@ export const getSurferCount = async (spotId: string): Promise<number> => {
     // Simulate API latency
     await new Promise(resolve => setTimeout(resolve, 300));
     
-    // Make sure we're returning the most current count
-    const currentCount = activeSurferCounts[spotId] || 0;
+    // Make sure we're returning the most current count from global state
+    const currentCount = globalSurferCounts[spotId] || 0;
     
     console.log(`[DEBUG] Getting surfer count for ${spotId}: ${currentCount}`);
     
-    // Also emit an event to ensure all components are updated
-    updateSurferCount(spotId, currentCount);
+    // Also update the local state to ensure it's in sync
+    activeSurferCounts[spotId] = currentCount;
     
-    // In a real implementation, this would query active check-ins
+    // Emit an event to ensure all components are updated
+    emitSurferCountUpdated(spotId, currentCount);
+    
     return currentCount;
   } catch (error) {
     console.error('Error getting surfer count:', error);
@@ -375,6 +385,9 @@ export const checkInToSpot = async (
     }
     activeSurferCounts[spotId]++;
     
+    // Update the global user check-in status
+    updateUserCheckedInStatus(spotId, true);
+    
     console.log(`[DEBUG] User ${userId} checked in at ${spotId}. Current check-ins:`, activeCheckIns);
     console.log(`[DEBUG] Updated surfer counts:`, activeSurferCounts);
     
@@ -417,6 +430,9 @@ export const checkOutFromSpot = async (checkInId: string): Promise<boolean> => {
     }
     
     if (foundSpotId && foundCheckIn) {
+      // Update the global user check-in status
+      updateUserCheckedInStatus(foundSpotId, false);
+      
       // Decrement surfer count
       if (activeSurferCounts[foundSpotId] > 0) {
         activeSurferCounts[foundSpotId]--;

@@ -14,8 +14,18 @@ import { Ionicons } from '@expo/vector-icons';
 import { RootStackScreenProps } from '../navigation/types';
 import { COLORS } from '../constants';
 import { SurfConditions } from '../types';
-import { fetchSurfConditions, fetchSurfForecast, checkInToSpot, checkOutFromSpot, getSurferCount, getActiveCheckInForUser, getActiveCheckInForUserAnywhere, fetchNearbySurfSpots } from '../services/api';
+import { 
+  fetchSurfConditions, 
+  fetchSurfForecast, 
+  checkInToSpot, 
+  checkOutFromSpot, 
+  getSurferCount, 
+  getActiveCheckInForUser, 
+  getActiveCheckInForUserAnywhere, 
+  fetchNearbySurfSpots 
+} from '../services/api';
 import { eventEmitter, AppEvents } from '../services/events';
+import { isUserCheckedInAt, getGlobalSurferCount } from '../services/globalState';
 
 const SpotDetailsScreen: React.FC = () => {
   const route = useRoute<RootStackScreenProps<'SpotDetails'>['route']>();
@@ -31,55 +41,49 @@ const SpotDetailsScreen: React.FC = () => {
   const [isCheckedIn, setIsCheckedIn] = useState(false);
   const [checkInId, setCheckInId] = useState<string | null>(null);
 
-  // Reset check-in status when spot ID changes
+  // Initial setup when spot changes
   useEffect(() => {
-    setIsCheckedIn(false);
-    setCheckInId(null);
+    console.log(`[DEBUG] SpotDetailsScreen loading for spot: ${spotId}`);
+    
+    // Reset check-in status and load data
+    setIsCheckedIn(isUserCheckedInAt(spotId));
+    setSurferCount(getGlobalSurferCount(spotId));
     loadData();
     checkExistingCheckIn();
   }, [spotId]);
   
-  // Re-check user's check-in status when the screen comes into focus
+  // Re-check user's check-in status and update counts when screen comes into focus
   useFocusEffect(
     React.useCallback(() => {
-      console.log(`[DEBUG] Screen focused for spot ${spotId}, checking check-in status`);
+      console.log(`[DEBUG] Screen focused for spot ${spotId}, checking check-in status and counts`);
       
-      // Always reset the state first to avoid stale data
-      setIsCheckedIn(false);
-      setCheckInId(null);
+      // First, check if the user is checked in at this specific spot using global state
+      const checkedInHere = isUserCheckedInAt(spotId);
+      console.log(`[DEBUG] Global state says user is ${checkedInHere ? '' : 'NOT '}checked in at ${spotId}`);
+      setIsCheckedIn(checkedInHere);
       
-      // Then check the current status for this spot
+      // Get current surfer count from global state
+      const currentCount = getGlobalSurferCount(spotId);
+      console.log(`[DEBUG] Global state says surfer count at ${spotId} is ${currentCount}`);
+      setSurferCount(currentCount);
+      
+      // Also verify with the API
       checkExistingCheckIn();
-      
-      // Also fetch the latest surfer count
-      const updateSurferCount = async () => {
-        const count = await getSurferCount(spotId);
-        setSurferCount(count);
-      };
-      updateSurferCount();
+      refreshSurferCount();
       
       return () => {};
     }, [spotId])
   );
 
-  // Listen for surfer count updates
-  useEffect(() => {
-    const handleSurferCountUpdate = (data: { spotId: string, count: number }) => {
-      // Only update if it's for the current spot
-      if (data.spotId === spotId) {
-        console.log(`[EVENT] Received surfer count update for current spot ${spotId}: ${data.count}`);
-        setSurferCount(data.count);
-      }
-    };
-
-    // Register for surfer count updates
-    eventEmitter.on(AppEvents.SURFER_COUNT_UPDATED, handleSurferCountUpdate);
-
-    // Clean up
-    return () => {
-      eventEmitter.off(AppEvents.SURFER_COUNT_UPDATED, handleSurferCountUpdate);
-    };
-  }, [spotId]); // Re-subscribe when spotId changes
+  // Refresh the surfer count from the API
+  const refreshSurferCount = async () => {
+    try {
+      const count = await getSurferCount(spotId);
+      setSurferCount(count);
+    } catch (error) {
+      console.error('Error refreshing surfer count:', error);
+    }
+  };
 
   const loadData = async () => {
     setIsLoading(true);

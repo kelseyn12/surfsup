@@ -7,6 +7,7 @@ import { COLORS, SPACING } from '../constants';
 import { formatWaveHeight, formatWind, formatTemperature } from '../utils/formatters';
 import { fetchSurfConditions, getSurferCount } from '../services/api';
 import { eventEmitter, AppEvents } from '../services/events';
+import { getGlobalSurferCount } from '../services/globalState';
 
 interface SurfSpotCardProps {
   spot: SurfSpot;
@@ -29,15 +30,24 @@ const SurfSpotCard: React.FC<SurfSpotCardProps> = ({
   const [conditions, setConditions] = useState<SurfConditions | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const [currentSurferCount, setCurrentSurferCount] = useState<number>(surferCount);
-
-  useEffect(() => {
-    // Update from props when it changes
-    setCurrentSurferCount(surferCount);
-  }, [surferCount]);
+  const [currentSurferCount, setCurrentSurferCount] = useState<number>(getGlobalSurferCount(spot.id));
 
   // Set up listener for surfer count updates
   useEffect(() => {
+    const updateSurferCount = () => {
+      // Always get from global state
+      const count = getGlobalSurferCount(spot.id);
+      console.log(`[SurfSpotCard] Getting count for ${spot.name}: ${count}`);
+      setCurrentSurferCount(count);
+    };
+    
+    // Initial update from props if provided
+    if (surferCount > 0) {
+      setCurrentSurferCount(surferCount);
+    } else {
+      updateSurferCount();
+    }
+    
     const handleSurferCountUpdate = (data: { spotId: string, count: number }) => {
       if (data.spotId === spot.id) {
         console.log(`[SurfSpotCard] Received update for ${spot.name}: ${data.count} surfers`);
@@ -47,17 +57,14 @@ const SurfSpotCard: React.FC<SurfSpotCardProps> = ({
 
     // Register event listener
     eventEmitter.on(AppEvents.SURFER_COUNT_UPDATED, handleSurferCountUpdate);
-
-    // Verify count on mount
-    const verifyCount = async () => {
-      const count = await getSurferCount(spot.id);
-      setCurrentSurferCount(count); 
-    };
-    verifyCount();
+    
+    // Update the count every 3 seconds to ensure freshness
+    const intervalId = setInterval(updateSurferCount, 3000);
 
     // Clean up
     return () => {
       eventEmitter.off(AppEvents.SURFER_COUNT_UPDATED, handleSurferCountUpdate);
+      clearInterval(intervalId);
     };
   }, [spot.id]);
 
@@ -82,8 +89,17 @@ const SurfSpotCard: React.FC<SurfSpotCardProps> = ({
   };
 
   const handlePress = () => {
-    // @ts-ignore - navigation types will be fixed later
-    navigation.navigate('SpotDetails', { spot, conditions });
+    // Get latest surfer count from global state
+    const latestCount = getGlobalSurferCount(spot.id);
+    
+    // Pass required data to the SpotDetails screen
+    navigation.navigate('SpotDetails', { 
+      spotId: spot.id, 
+      spot: {
+        ...spot,
+        currentSurferCount: latestCount
+      }
+    });
   };
 
   const getConditionColor = (rating: number) => {
