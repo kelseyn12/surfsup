@@ -1,17 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   StyleSheet, 
   View, 
   Text, 
   ScrollView, 
   TouchableOpacity, 
-  Image 
+  Image,
+  Alert,
+  ActivityIndicator
 } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { RootStackScreenProps } from '../navigation/types';
 import { COLORS } from '../constants';
 import { SurfConditions } from '../types';
+import { fetchSurfConditions, fetchSurfForecast, checkInToSpot, checkOutFromSpot, getSurferCount } from '../services/api';
 
 const SpotDetailsScreen: React.FC = () => {
   const route = useRoute<RootStackScreenProps<'SpotDetails'>['route']>();
@@ -20,47 +23,40 @@ const SpotDetailsScreen: React.FC = () => {
   // Get spot details from route params or use fallback
   const { spotId, spot } = route.params || { spotId: '0', spot: { name: 'Unknown Spot' } };
   const [isFavorite, setIsFavorite] = useState(false);
+  const [currentConditions, setCurrentConditions] = useState<SurfConditions | null>(null);
+  const [forecast, setForecast] = useState<SurfConditions[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [surferCount, setSurferCount] = useState(0);
+  const [isCheckedIn, setIsCheckedIn] = useState(false);
+  const [checkInId, setCheckInId] = useState<string | null>(null);
 
-  // Mock current conditions for Lake Superior
-  const currentConditions: SurfConditions = {
-    spotId: spotId || '0',
-    timestamp: new Date().toISOString(),
-    waveHeight: {
-      min: 3.0,
-      max: 4.0,
-      unit: 'ft'
-    },
-    wind: {
-      speed: 15,
-      direction: 'NE',
-      unit: 'mph'
-    },
-    swell: [{
-      height: 3.5,
-      period: 6,
-      direction: 'NE'
-    }],
-    tide: {
-      current: 0,
-      unit: 'ft'
-    },
-    weather: {
-      temperature: 38,
-      condition: 'partly cloudy',
-      unit: 'F'
-    },
-    rating: 7,
-    source: 'forecast'
+  // Load data on component mount
+  useEffect(() => {
+    loadData();
+  }, [spotId]);
+
+  const loadData = async () => {
+    setIsLoading(true);
+    try {
+      // Fetch current conditions
+      const conditions = await fetchSurfConditions(spotId);
+      if (conditions) {
+        setCurrentConditions(conditions);
+        setSurferCount(conditions.surferCount || 0);
+      }
+
+      // Fetch forecast
+      const forecastData = await fetchSurfForecast(spotId, 5);
+      if (forecastData) {
+        setForecast(forecastData);
+      }
+    } catch (error) {
+      console.error('Error loading spot data:', error);
+      Alert.alert('Error', 'Failed to load spot information. Please try again later.');
+    } finally {
+      setIsLoading(false);
+    }
   };
-
-  // Mock forecast data for Lake Superior
-  const forecast = [
-    { day: 'Today', waveHeight: '3-4ft', period: '6s', wind: 'NE 15mph', rating: 'Good' },
-    { day: 'Tomorrow', waveHeight: '4-6ft', period: '7s', wind: 'N 20mph', rating: 'Excellent' },
-    { day: 'Wed', waveHeight: '2-3ft', period: '5s', wind: 'NW 10mph', rating: 'Fair' },
-    { day: 'Thu', waveHeight: '1-2ft', period: '4s', wind: 'W 5mph', rating: 'Poor' },
-    { day: 'Fri', waveHeight: '3-4ft', period: '6s', wind: 'NE 15mph', rating: 'Good' },
-  ];
 
   // Toggle favorite status
   const toggleFavorite = () => {
@@ -68,28 +64,112 @@ const SpotDetailsScreen: React.FC = () => {
     // In a real app, you would persist this to storage or API
   };
 
-  // Function to determine color based on rating
-  const getRatingColor = (rating: string) => {
-    switch (rating) {
-      case 'Excellent':
-        return COLORS.surfConditions.excellent;
-      case 'Good':
-        return COLORS.surfConditions.good;
-      case 'Fair':
-        return COLORS.surfConditions.fair;
-      case 'Poor':
-        return COLORS.surfConditions.poor;
-      default:
-        return COLORS.gray;
+  // Handle check-in
+  const handleCheckIn = async () => {
+    if (isCheckedIn) {
+      // Check out flow
+      if (checkInId) {
+        setIsLoading(true);
+        try {
+          const success = await checkOutFromSpot(checkInId);
+          if (success) {
+            setIsCheckedIn(false);
+            setCheckInId(null);
+            // Update surfer count (decrement)
+            const newCount = await getSurferCount(spotId);
+            setSurferCount(newCount);
+            Alert.alert('Success', 'You have checked out from this spot!');
+          } else {
+            Alert.alert('Error', 'Failed to check out. Please try again.');
+          }
+        } catch (error) {
+          console.error('Error checking out:', error);
+          Alert.alert('Error', 'Failed to check out. Please try again.');
+        } finally {
+          setIsLoading(false);
+        }
+      }
+    } else {
+      // Check in flow
+      setIsLoading(true);
+      try {
+        // In a real app, you would get the actual userId from auth state
+        const userId = 'test-user-id';
+        const checkIn = await checkInToSpot(userId, spotId);
+        
+        if (checkIn) {
+          setIsCheckedIn(true);
+          setCheckInId(checkIn.id);
+          // Update surfer count (increment)
+          const newCount = await getSurferCount(spotId);
+          setSurferCount(newCount);
+          Alert.alert('Success', 'You have checked in to this spot!');
+        } else {
+          Alert.alert('Error', 'Failed to check in. Please try again.');
+        }
+      } catch (error) {
+        console.error('Error checking in:', error);
+        Alert.alert('Error', 'Failed to check in. Please try again.');
+      } finally {
+        setIsLoading(false);
+      }
     }
   };
+
+  // Function to determine color based on rating
+  const getRatingColor = (rating: number) => {
+    if (rating >= 8) return COLORS.surfConditions.excellent;
+    if (rating >= 6) return COLORS.surfConditions.good;
+    if (rating >= 4) return COLORS.surfConditions.fair;
+    return COLORS.surfConditions.poor;
+  };
+
+  // Function to get appropriate surfer activity label and color
+  const getSurferActivityLabel = (count: number): string => {
+    if (count === 0) return 'No surfers';
+    if (count < 3) return 'Low activity';
+    if (count < 8) return 'Active';
+    return 'Crowded';
+  };
+
+  const getSurferCountColor = (count: number): string => {
+    if (count === 0) return COLORS.gray;
+    if (count < 3) return COLORS.success;
+    if (count < 8) return COLORS.warning;
+    return COLORS.error;
+  };
+
+  // Create a formatted forecast from the API data
+  const formattedForecast = forecast.slice(0, 5).map((item, index) => {
+    const day = index === 0 ? 'Today' : 
+               index === 1 ? 'Tomorrow' : 
+               new Date(item.timestamp).toLocaleDateString('en-US', { weekday: 'short' });
+    
+    return {
+      day,
+      timestamp: item.timestamp,
+      waveHeight: `${item.waveHeight.min}-${item.waveHeight.max}${item.waveHeight.unit}`,
+      period: `${Math.round(item.swell[0]?.period || 0)}s`,
+      wind: `${item.wind.direction} ${item.wind.speed}${item.wind.unit}`,
+      rating: item.rating,
+    };
+  });
+
+  if (isLoading && !currentConditions) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={COLORS.primary} />
+        <Text style={styles.loadingText}>Loading spot information...</Text>
+      </View>
+    );
+  }
 
   return (
     <ScrollView style={styles.container}>
       {/* Hero image */}
       <View style={styles.imageContainer}>
         <Image 
-          source={{ uri: 'https://via.placeholder.com/800x400' }} 
+          source={{ uri: spot?.imageUrls?.[0] || 'https://via.placeholder.com/800x400' }} 
           style={styles.spotImage} 
         />
         <View style={styles.imageOverlay}>
@@ -106,66 +186,108 @@ const SpotDetailsScreen: React.FC = () => {
         </View>
       </View>
 
+      {/* Spot header with surfer count */}
+      <View style={styles.spotHeader}>
+        <View style={styles.spotTitleContainer}>
+          <Text style={styles.spotName}>{spot?.name}</Text>
+          <Text style={styles.spotLocation}>
+            {[spot?.location?.city, spot?.location?.state].filter(Boolean).join(', ')}
+          </Text>
+        </View>
+
+        <View style={styles.surferCountContainer}>
+          <View style={[styles.surferCountBadge, { backgroundColor: getSurferCountColor(surferCount) }]}>
+            <Text style={styles.surferCountNumber}>{surferCount}</Text>
+            <Ionicons name="people" size={14} color={COLORS.white} />
+          </View>
+          <Text style={styles.surferCountLabel}>{getSurferActivityLabel(surferCount)}</Text>
+        </View>
+      </View>
+
       {/* Current conditions */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Current Conditions</Text>
-        <View style={styles.conditionsCard}>
-          <View style={styles.conditionRow}>
-            <View style={styles.conditionItem}>
-              <Ionicons name="water-outline" size={24} color={COLORS.primary} />
-              <Text style={styles.conditionLabel}>Wave Height</Text>
-              <Text style={styles.conditionValue}>{currentConditions.waveHeight.min}-{currentConditions.waveHeight.max} {currentConditions.waveHeight.unit}</Text>
+        {currentConditions ? (
+          <View style={styles.conditionsCard}>
+            <View style={styles.conditionRow}>
+              <View style={styles.conditionItem}>
+                <Ionicons name="water-outline" size={24} color={COLORS.primary} />
+                <Text style={styles.conditionLabel}>Wave Height</Text>
+                <Text style={styles.conditionValue}>
+                  {currentConditions.waveHeight.min}-{currentConditions.waveHeight.max} {currentConditions.waveHeight.unit}
+                </Text>
+              </View>
+              <View style={styles.conditionItem}>
+                <Ionicons name="time-outline" size={24} color={COLORS.primary} />
+                <Text style={styles.conditionLabel}>Period</Text>
+                <Text style={styles.conditionValue}>{currentConditions.swell[0]?.period || 0}s</Text>
+              </View>
             </View>
-            <View style={styles.conditionItem}>
-              <Ionicons name="time-outline" size={24} color={COLORS.primary} />
-              <Text style={styles.conditionLabel}>Period</Text>
-              <Text style={styles.conditionValue}>{currentConditions.swell[0].period}s</Text>
+            <View style={styles.conditionRow}>
+              <View style={styles.conditionItem}>
+                <Ionicons name="speedometer-outline" size={24} color={COLORS.primary} />
+                <Text style={styles.conditionLabel}>Wind</Text>
+                <Text style={styles.conditionValue}>
+                  {currentConditions.wind.speed}{currentConditions.wind.unit === 'mph' ? 'mph' : 'kn'} {currentConditions.wind.direction}
+                </Text>
+              </View>
+              <View style={styles.conditionItem}>
+                <Ionicons name="thermometer-outline" size={24} color={COLORS.primary} />
+                <Text style={styles.conditionLabel}>Water Temp</Text>
+                <Text style={styles.conditionValue}>
+                  {currentConditions.weather.temperature}°{currentConditions.weather.unit}
+                </Text>
+              </View>
+            </View>
+            <View style={styles.ratingContainer}>
+              <Text style={styles.ratingLabel}>Overall Rating:</Text>
+              <Text style={[styles.ratingValue, { color: getRatingColor(currentConditions.rating) }]}>
+                {currentConditions.rating}/10
+              </Text>
             </View>
           </View>
-          <View style={styles.conditionRow}>
-            <View style={styles.conditionItem}>
-              <Ionicons name="speedometer-outline" size={24} color={COLORS.primary} />
-              <Text style={styles.conditionLabel}>Wind</Text>
-              <Text style={styles.conditionValue}>{currentConditions.wind.speed}{currentConditions.wind.unit === 'mph' ? 'mph' : 'kn'} {currentConditions.wind.direction}</Text>
-            </View>
-            <View style={styles.conditionItem}>
-              <Ionicons name="thermometer-outline" size={24} color={COLORS.primary} />
-              <Text style={styles.conditionLabel}>Water Temp</Text>
-              <Text style={styles.conditionValue}>{currentConditions.weather.temperature}°{currentConditions.weather.unit}</Text>
-            </View>
+        ) : (
+          <View style={styles.noDataContainer}>
+            <Text style={styles.noDataText}>No current conditions available</Text>
           </View>
-        </View>
+        )}
       </View>
 
       {/* Forecast */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Forecast</Text>
-        <ScrollView 
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.forecastContainer}
-        >
-          {forecast.map((day, index) => (
-            <View key={index} style={styles.forecastCard}>
-              <Text style={styles.forecastDay}>{day.day}</Text>
-              <Text style={[styles.forecastRating, { color: getRatingColor(day.rating) }]}>
-                {day.rating}
-              </Text>
-              <View style={styles.forecastDetail}>
-                <Ionicons name="water-outline" size={16} color={COLORS.gray} />
-                <Text style={styles.forecastDetailText}>{day.waveHeight}</Text>
+        {formattedForecast.length > 0 ? (
+          <ScrollView 
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.forecastContainer}
+          >
+            {formattedForecast.map((day, index) => (
+              <View key={index} style={styles.forecastCard}>
+                <Text style={styles.forecastDay}>{day.day}</Text>
+                <Text style={[styles.forecastRating, { color: getRatingColor(day.rating) }]}>
+                  {day.rating}/10
+                </Text>
+                <View style={styles.forecastDetail}>
+                  <Ionicons name="water-outline" size={16} color={COLORS.gray} />
+                  <Text style={styles.forecastDetailText}>{day.waveHeight}</Text>
+                </View>
+                <View style={styles.forecastDetail}>
+                  <Ionicons name="time-outline" size={16} color={COLORS.gray} />
+                  <Text style={styles.forecastDetailText}>{day.period}</Text>
+                </View>
+                <View style={styles.forecastDetail}>
+                  <Ionicons name="speedometer-outline" size={16} color={COLORS.gray} />
+                  <Text style={styles.forecastDetailText}>{day.wind}</Text>
+                </View>
               </View>
-              <View style={styles.forecastDetail}>
-                <Ionicons name="time-outline" size={16} color={COLORS.gray} />
-                <Text style={styles.forecastDetailText}>{day.period}</Text>
-              </View>
-              <View style={styles.forecastDetail}>
-                <Ionicons name="speedometer-outline" size={16} color={COLORS.gray} />
-                <Text style={styles.forecastDetailText}>{day.wind}</Text>
-              </View>
-            </View>
-          ))}
-        </ScrollView>
+            ))}
+          </ScrollView>
+        ) : (
+          <View style={styles.noDataContainer}>
+            <Text style={styles.noDataText}>No forecast data available</Text>
+          </View>
+        )}
       </View>
 
       {/* Additional info */}
@@ -173,9 +295,9 @@ const SpotDetailsScreen: React.FC = () => {
         <Text style={styles.sectionTitle}>About This Spot</Text>
         <View style={styles.infoCard}>
           <Text style={styles.infoText}>
-            {spot?.name} is a popular Lake Superior surf spot known for consistent waves during north and northeast winds. 
+            {spot?.description || `${spot?.name} is a popular Lake Superior surf spot known for consistent waves during north and northeast winds. 
             It works best during fall and winter months when winds are strongest.
-            Water temperatures can be very cold, ranging from 32-55°F depending on the season, so a thick wetsuit, boots, gloves, and hood are essential.
+            Water temperatures can be very cold, ranging from 32-55°F depending on the season, so a thick wetsuit, boots, gloves, and hood are essential.`}
           </Text>
         </View>
       </View>
@@ -183,11 +305,14 @@ const SpotDetailsScreen: React.FC = () => {
       {/* Action buttons */}
       <View style={styles.actions}>
         <TouchableOpacity 
-          style={styles.actionButton}
-          onPress={() => navigation.navigate('CheckIn', { spotId, spot })}
+          style={[styles.actionButton, isCheckedIn && styles.checkOutButton]}
+          onPress={handleCheckIn}
+          disabled={isLoading}
         >
-          <Ionicons name="location-outline" size={20} color={COLORS.white} />
-          <Text style={styles.actionButtonText}>Check In</Text>
+          <Ionicons name={isCheckedIn ? "log-out-outline" : "location-outline"} size={20} color={COLORS.white} />
+          <Text style={styles.actionButtonText}>
+            {isLoading ? 'Processing...' : isCheckedIn ? 'Check Out' : 'Check In'}
+          </Text>
         </TouchableOpacity>
         <TouchableOpacity 
           style={[styles.actionButton, styles.secondaryButton]}
@@ -205,6 +330,18 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.background,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: COLORS.background,
+    padding: 20,
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 16,
+    color: COLORS.text.secondary,
   },
   imageContainer: {
     position: 'relative',
@@ -227,6 +364,50 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.3)',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  spotHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 16,
+    backgroundColor: COLORS.white,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
+  },
+  spotTitleContainer: {
+    flex: 1,
+  },
+  spotName: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: COLORS.text.primary,
+  },
+  spotLocation: {
+    fontSize: 16,
+    color: COLORS.text.secondary,
+    marginTop: 4,
+  },
+  surferCountContainer: {
+    alignItems: 'center',
+  },
+  surferCountBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    marginBottom: 4,
+  },
+  surferCountNumber: {
+    color: COLORS.white,
+    fontWeight: 'bold',
+    marginRight: 4,
+    fontSize: 14,
+  },
+  surferCountLabel: {
+    fontSize: 12,
+    color: COLORS.text.secondary,
   },
   section: {
     padding: 16,
@@ -267,6 +448,21 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: COLORS.text.primary,
     marginTop: 4,
+  },
+  ratingContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 16,
+  },
+  ratingLabel: {
+    fontSize: 14,
+    color: COLORS.text.secondary,
+  },
+  ratingValue: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: COLORS.text.primary,
   },
   forecastContainer: {
     paddingRight: 16,
@@ -348,6 +544,19 @@ const styles = StyleSheet.create({
   },
   secondaryButtonText: {
     color: COLORS.primary,
+  },
+  checkOutButton: {
+    backgroundColor: COLORS.error,
+  },
+  noDataContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  noDataText: {
+    fontSize: 16,
+    color: COLORS.text.secondary,
   },
 });
 
