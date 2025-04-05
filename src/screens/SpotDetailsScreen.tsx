@@ -31,8 +31,10 @@ const SpotDetailsScreen: React.FC = () => {
   const [isCheckedIn, setIsCheckedIn] = useState(false);
   const [checkInId, setCheckInId] = useState<string | null>(null);
 
-  // Load data on component mount
+  // Reset check-in status when spot ID changes
   useEffect(() => {
+    setIsCheckedIn(false);
+    setCheckInId(null);
     loadData();
     checkExistingCheckIn();
   }, [spotId]);
@@ -41,6 +43,12 @@ const SpotDetailsScreen: React.FC = () => {
   useFocusEffect(
     React.useCallback(() => {
       console.log(`[DEBUG] Screen focused for spot ${spotId}, checking check-in status`);
+      
+      // Always reset the state first to avoid stale data
+      setIsCheckedIn(false);
+      setCheckInId(null);
+      
+      // Then check the current status for this spot
       checkExistingCheckIn();
       
       // Also fetch the latest surfer count
@@ -53,6 +61,25 @@ const SpotDetailsScreen: React.FC = () => {
       return () => {};
     }, [spotId])
   );
+
+  // Listen for surfer count updates
+  useEffect(() => {
+    const handleSurferCountUpdate = (data: { spotId: string, count: number }) => {
+      // Only update if it's for the current spot
+      if (data.spotId === spotId) {
+        console.log(`[EVENT] Received surfer count update for current spot ${spotId}: ${data.count}`);
+        setSurferCount(data.count);
+      }
+    };
+
+    // Register for surfer count updates
+    eventEmitter.on(AppEvents.SURFER_COUNT_UPDATED, handleSurferCountUpdate);
+
+    // Clean up
+    return () => {
+      eventEmitter.off(AppEvents.SURFER_COUNT_UPDATED, handleSurferCountUpdate);
+    };
+  }, [spotId]); // Re-subscribe when spotId changes
 
   const loadData = async () => {
     setIsLoading(true);

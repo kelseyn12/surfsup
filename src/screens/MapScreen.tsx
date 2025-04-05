@@ -5,7 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { MainTabScreenProps } from '../navigation/types';
 import { COLORS } from '../constants';
 import { SurfSpot } from '../types';
-import { fetchNearbySurfSpots } from '../services/api';
+import { fetchNearbySurfSpots, getSurferCount } from '../services/api';
 import { eventEmitter, AppEvents } from '../services/events';
 
 // In a full implementation, we would import and use a map component like:
@@ -25,13 +25,15 @@ const MapScreen: React.FC = () => {
     longitudeDelta: 0.5,
   });
 
-  // Load spots when component mounts
+  // Initial load
   useEffect(() => {
     loadSurfSpots();
+  }, []);
 
-    // Listen for surfer count updates
+  // Set up event listener for surfer count updates
+  useEffect(() => {
     const handleSurferCountUpdate = (data: { spotId: string, count: number }) => {
-      console.log(`[EVENT] Surfer count updated for ${data.spotId}: ${data.count}`);
+      console.log(`[EVENT] MapScreen received surfer count update for ${data.spotId}: ${data.count}`);
       
       // Update the surfer count for the specific spot
       setSurfSpots(currentSpots => 
@@ -52,15 +54,13 @@ const MapScreen: React.FC = () => {
     };
   }, []);
 
-  // Refresh spots when screen comes into focus (e.g., after check-in/check-out)
+  // Always refresh when screen comes into focus
   useFocusEffect(
     React.useCallback(() => {
-      // Only reload if we've previously loaded spots
-      if (surfSpots.length > 0) {
-        loadSurfSpots();
-      }
+      console.log('[DEBUG] MapScreen focused, refreshing data');
+      loadSurfSpots();
       return () => {};
-    }, [surfSpots.length])
+    }, [])
   );
 
   const loadSurfSpots = async () => {
@@ -68,7 +68,17 @@ const MapScreen: React.FC = () => {
     try {
       const spots = await fetchNearbySurfSpots(region.latitude, region.longitude);
       if (spots) {
-        setSurfSpots(spots);
+        console.log('[DEBUG] MapScreen loaded spots:', spots.length);
+        
+        // Make sure each spot shows the latest surfer count
+        const updatedSpots = [...spots];
+        for (let i = 0; i < updatedSpots.length; i++) {
+          const latestCount = await getSurferCount(updatedSpots[i].id);
+          console.log(`[DEBUG] Getting latest count for ${updatedSpots[i].name}: ${latestCount}`);
+          updatedSpots[i].currentSurferCount = latestCount;
+        }
+        
+        setSurfSpots(updatedSpots);
       }
     } catch (error) {
       console.error('Error loading surf spots:', error);

@@ -105,19 +105,20 @@ const FavoritesScreen: React.FC = () => {
   // Refresh surfer counts when screen comes into focus
   useFocusEffect(
     React.useCallback(() => {
-      // Only reload if we have favorite spots and we're not already refreshing
-      if (favoriteSpots.length > 0 && !refreshing) {
-        loadSurferCounts();
-      }
+      console.log('[DEBUG] FavoritesScreen focused, refreshing data');
+      loadSurferCounts();
       return () => {};
-    }, [favoriteSpots.length, refreshing])
+    }, [])
   );
 
   const loadSurferCounts = async () => {
+    console.log('[DEBUG] Loading surfer counts for favorites');
     const counts: Record<string, number> = {};
     
     for (const spot of favoriteSpots) {
-      counts[spot.id] = await getSurferCount(spot.id);
+      const count = await getSurferCount(spot.id);
+      console.log(`[DEBUG] Getting latest count for ${spot.name}: ${count}`);
+      counts[spot.id] = count;
     }
     
     setSurferCounts(counts);

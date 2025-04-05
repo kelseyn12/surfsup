@@ -60,6 +60,16 @@ let activeCheckIns: Record<string, CheckIn[]> = {
   'superiorentry': [],
 };
 
+// Function to update a spot's surfer count and emit the event
+const updateSurferCount = (spotId: string, count: number) => {
+  // Update the count
+  activeSurferCounts[spotId] = count;
+  
+  // Emit the event
+  console.log(`[DEBUG] Broadcasting surfer count update for ${spotId}: ${count}`);
+  emitSurferCountUpdated(spotId, count);
+};
+
 /**
  * Fetches current surf conditions for a specific spot
  * This is a mock implementation that would be replaced with actual API calls
@@ -358,7 +368,7 @@ export const checkInToSpot = async (
     
     // Emit events to notify other parts of the app
     emitCheckInStatusChanged(spotId, true);
-    emitSurferCountUpdated(spotId, activeSurferCounts[spotId]);
+    updateSurferCount(spotId, activeSurferCounts[spotId]);
     
     return checkIn;
   } catch (error) {
@@ -405,7 +415,7 @@ export const checkOutFromSpot = async (checkInId: string): Promise<boolean> => {
       
       // Emit events to notify other parts of the app
       emitCheckInStatusChanged(foundSpotId, false);
-      emitSurferCountUpdated(foundSpotId, activeSurferCounts[foundSpotId]);
+      updateSurferCount(foundSpotId, activeSurferCounts[foundSpotId]);
       
       return true;
     }

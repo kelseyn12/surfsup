@@ -14,12 +14,15 @@ const HomeScreen: React.FC = () => {
   const [nearbySpots, setNearbySpots] = useState<SurfSpot[]>([]);
   const [loading, setLoading] = useState(false);
 
+  // Initial load of nearby spots
   useEffect(() => {
     loadNearbySpots();
+  }, []);
 
-    // Listen for surfer count updates
+  // Set up event listener for surfer count updates
+  useEffect(() => {
     const handleSurferCountUpdate = (data: { spotId: string, count: number }) => {
-      console.log(`[EVENT] Surfer count updated for ${data.spotId}: ${data.count}`);
+      console.log(`[EVENT] HomeScreen received surfer count update for ${data.spotId}: ${data.count}`);
       
       // Update the surfer count for the specific spot
       setNearbySpots(currentSpots => 
@@ -40,15 +43,13 @@ const HomeScreen: React.FC = () => {
     };
   }, []);
 
-  // Refresh spots when screen comes into focus
+  // Always refresh the data when coming back to this screen
   useFocusEffect(
     React.useCallback(() => {
-      // Only reload if we already have spots loaded
-      if (nearbySpots.length > 0 && !refreshing) {
-        loadNearbySpots();
-      }
+      console.log('[DEBUG] HomeScreen focused, refreshing data');
+      loadNearbySpots();
       return () => {};
-    }, [nearbySpots.length, refreshing])
+    }, [])
   );
 
   const loadNearbySpots = async () => {
@@ -57,13 +58,17 @@ const HomeScreen: React.FC = () => {
       // Using a fixed location for Lake Superior near Duluth
       const spots = await fetchNearbySurfSpots(46.7825, -92.0856);
       if (spots) {
+        console.log('[DEBUG] HomeScreen loaded spots:', spots.length);
+        
         // Make sure each spot shows the latest surfer count
-        for (const spot of spots) {
-          // Fetch the latest count for each spot
-          const latestCount = await getSurferCount(spot.id);
-          spot.currentSurferCount = latestCount;
+        const updatedSpots = [...spots];
+        for (let i = 0; i < updatedSpots.length; i++) {
+          const latestCount = await getSurferCount(updatedSpots[i].id);
+          console.log(`[DEBUG] Getting latest count for ${updatedSpots[i].name}: ${latestCount}`);
+          updatedSpots[i].currentSurferCount = latestCount;
         }
-        setNearbySpots(spots);
+        
+        setNearbySpots(updatedSpots);
       }
     } catch (error) {
       console.error('Error loading nearby spots:', error);
@@ -72,6 +77,7 @@ const HomeScreen: React.FC = () => {
     }
   };
 
+  // On manual refresh
   const onRefresh = React.useCallback(() => {
     setRefreshing(true);
     loadNearbySpots().then(() => {
