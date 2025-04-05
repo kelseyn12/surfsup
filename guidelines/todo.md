@@ -17,7 +17,7 @@ This document maintains a running list of tasks, enhancements, bug fixes, and te
 - [X] Create mock data for development
 - [X] Set up project documentation in guidelines folder
 - [ ] Install and configure necessary dependencies
-- [ ] Set up linting and code formatting
+- [X] Set up linting and code formatting
 
 ## Core Features
 
@@ -75,15 +75,15 @@ This document maintains a running list of tasks, enhancements, bug fixes, and te
 
 - [ ] Set up API service layer
 - [ ] Implement data caching strategy
-- [ ] Create local storage utilities
+- [X] Create local storage utilities
 - [ ] Set up state management
 - [ ] Implement offline support
 - [ ] Add synchronization for offline changes
 
 ## Testing & Quality Assurance
 
-- [ ] Set up testing framework
-- [ ] Write unit tests for utilities
+- [X] Set up testing framework
+- [X] Write unit tests for utilities
 - [ ] Create component tests
 - [ ] Implement integration tests
 - [ ] Set up CI/CD pipeline
