@@ -210,6 +210,9 @@ export const fetchNearbySurfSpots = async (
     // In a real implementation, this would query a database
     // or external API for spots near the provided coordinates
     
+    // Force refresh the latest counts before returning spots
+    console.log('[DEBUG] Current active surfer counts before returning spots:', activeSurferCounts);
+    
     // Mock data for Lake Superior spots
     const lakeSuperiorSpots: SurfSpot[] = [
       {
@@ -227,7 +230,7 @@ export const fetchNearbySurfSpots = async (
         amenities: ['parking'],
         description: 'Popular spot for Lake Superior surfers with consistent waves during NE winds.',
         imageUrls: ['https://example.com/stonypoint.jpg'],
-        currentSurferCount: activeSurferCounts['stonypoint'] || 0, // Use the shared surfer count value
+        currentSurferCount: activeSurferCounts['stonypoint'],
         lastActivityUpdate: new Date().toISOString(),
         createdAt: '2023-01-15T00:00:00.000Z',
         updatedAt: '2023-01-15T00:00:00.000Z',
@@ -247,7 +250,7 @@ export const fetchNearbySurfSpots = async (
         amenities: ['parking', 'restrooms'],
         description: 'Long sandy beach with gentle waves, perfect for beginners during calm conditions.',
         imageUrls: ['https://example.com/parkpoint.jpg'],
-        currentSurferCount: activeSurferCounts['parkpoint'] || 0, // Use the shared surfer count value
+        currentSurferCount: activeSurferCounts['parkpoint'],
         lastActivityUpdate: new Date().toISOString(),
         createdAt: '2023-01-15T00:00:00.000Z',
         updatedAt: '2023-01-15T00:00:00.000Z',
@@ -267,7 +270,7 @@ export const fetchNearbySurfSpots = async (
         amenities: ['parking'],
         description: 'River mouth break that works well during strong winds and storms.',
         imageUrls: ['https://example.com/lesterriver.jpg'],
-        currentSurferCount: activeSurferCounts['lesterriver'] || 0, // Use the shared surfer count value
+        currentSurferCount: activeSurferCounts['lesterriver'],
         lastActivityUpdate: new Date().toISOString(),
         createdAt: '2023-01-15T00:00:00.000Z',
         updatedAt: '2023-01-15T00:00:00.000Z',
@@ -287,12 +290,15 @@ export const fetchNearbySurfSpots = async (
         amenities: ['parking'],
         description: 'Powerful break near the canal entrance. For experienced surfers only.',
         imageUrls: ['https://example.com/superiorentry.jpg'],
-        currentSurferCount: activeSurferCounts['superiorentry'] || 0, // Use the shared surfer count value
+        currentSurferCount: activeSurferCounts['superiorentry'],
         lastActivityUpdate: new Date().toISOString(),
         createdAt: '2023-01-15T00:00:00.000Z',
         updatedAt: '2023-01-15T00:00:00.000Z',
       },
     ];
+    
+    console.log('[DEBUG] Returning spots with counts:', 
+      lakeSuperiorSpots.map(spot => `${spot.name}: ${spot.currentSurferCount}`).join(', '));
     
     // Return all spots for this mock implementation
     // In a real app, we would filter based on distance from provided coordinates
@@ -310,12 +316,18 @@ export const fetchNearbySurfSpots = async (
 export const getSurferCount = async (spotId: string): Promise<number> => {
   try {
     // Simulate API latency
-    await new Promise(resolve => setTimeout(resolve, 500));
+    await new Promise(resolve => setTimeout(resolve, 300));
     
-    console.log(`[DEBUG] Getting surfer count for ${spotId}:`, activeSurferCounts[spotId] || 0);
+    // Make sure we're returning the most current count
+    const currentCount = activeSurferCounts[spotId] || 0;
+    
+    console.log(`[DEBUG] Getting surfer count for ${spotId}: ${currentCount}`);
+    
+    // Also emit an event to ensure all components are updated
+    updateSurferCount(spotId, currentCount);
     
     // In a real implementation, this would query active check-ins
-    return activeSurferCounts[spotId] || 0;
+    return currentCount;
   } catch (error) {
     console.error('Error getting surfer count:', error);
     return 0;

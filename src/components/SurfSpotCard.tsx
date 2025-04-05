@@ -5,7 +5,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { SurfSpot, SurfConditions } from '../types';
 import { COLORS, SPACING } from '../constants';
 import { formatWaveHeight, formatWind, formatTemperature } from '../utils/formatters';
-import { fetchSurfConditions } from '../services/api';
+import { fetchSurfConditions, getSurferCount } from '../services/api';
+import { eventEmitter, AppEvents } from '../services/events';
 
 interface SurfSpotCardProps {
   spot: SurfSpot;
@@ -28,6 +29,37 @@ const SurfSpotCard: React.FC<SurfSpotCardProps> = ({
   const [conditions, setConditions] = useState<SurfConditions | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [currentSurferCount, setCurrentSurferCount] = useState<number>(surferCount);
+
+  useEffect(() => {
+    // Update from props when it changes
+    setCurrentSurferCount(surferCount);
+  }, [surferCount]);
+
+  // Set up listener for surfer count updates
+  useEffect(() => {
+    const handleSurferCountUpdate = (data: { spotId: string, count: number }) => {
+      if (data.spotId === spot.id) {
+        console.log(`[SurfSpotCard] Received update for ${spot.name}: ${data.count} surfers`);
+        setCurrentSurferCount(data.count);
+      }
+    };
+
+    // Register event listener
+    eventEmitter.on(AppEvents.SURFER_COUNT_UPDATED, handleSurferCountUpdate);
+
+    // Verify count on mount
+    const verifyCount = async () => {
+      const count = await getSurferCount(spot.id);
+      setCurrentSurferCount(count); 
+    };
+    verifyCount();
+
+    // Clean up
+    return () => {
+      eventEmitter.off(AppEvents.SURFER_COUNT_UPDATED, handleSurferCountUpdate);
+    };
+  }, [spot.id]);
 
   useEffect(() => {
     if (showConditions) {
@@ -182,11 +214,11 @@ const SurfSpotCard: React.FC<SurfSpotCardProps> = ({
           <View 
             style={[
               styles.surferCountBadge, 
-              { backgroundColor: getSurferCountColor(surferCount) }
+              { backgroundColor: getSurferCountColor(currentSurferCount) }
             ]}
           >
             <Ionicons name="people" size={12} color={COLORS.white} />
-            <Text style={styles.surferCountText}>{surferCount}</Text>
+            <Text style={styles.surferCountText}>{currentSurferCount}</Text>
           </View>
         </View>
         
@@ -206,30 +238,24 @@ const SurfSpotCard: React.FC<SurfSpotCardProps> = ({
           </View>
           
           <Text style={styles.location}>
-            {[spot.location.city, spot.location.state].filter(Boolean).join(', ')}
+            {[spot.location?.city, spot.location?.state].filter(Boolean).join(', ')}
           </Text>
           
           {!compact && (
             <Text style={styles.description} numberOfLines={2}>
-              {spot.description || 'No description available'}
+              {spot.description}
             </Text>
           )}
-          
-          {!compact && (
-            <View style={styles.bottomRow}>
-              {renderConditions()}
-              
-              {/* Surfer activity label - shown only in full card view */}
-              <View style={[
-                styles.activityBadge,
-                { backgroundColor: getSurferCountColor(surferCount) }
-              ]}>
-                <Text style={styles.activityText}>
-                  {getSurferActivityLabel(surferCount)}
-                </Text>
-              </View>
+
+          {!compact && showConditions && !conditions && !isLoading && (
+            <View style={styles.surferActivity}>
+              <Text style={styles.surferActivityText}>
+                {getSurferActivityLabel(currentSurferCount)}
+              </Text>
             </View>
           )}
+          
+          {showConditions && renderConditions()}
         </View>
       </View>
     </TouchableOpacity>
@@ -389,6 +415,17 @@ const styles = StyleSheet.create({
   },
   activityText: {
     color: COLORS.white,
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  surferActivity: {
+    padding: 8,
+    borderRadius: 4,
+    backgroundColor: 'rgba(0,0,0,0.1)',
+    marginBottom: 12,
+  },
+  surferActivityText: {
+    color: COLORS.text.primary,
     fontSize: 12,
     fontWeight: '500',
   }

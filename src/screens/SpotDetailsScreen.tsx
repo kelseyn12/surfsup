@@ -154,8 +154,8 @@ const SpotDetailsScreen: React.FC = () => {
             // Update surfer count (decrement)
             const newCount = await getSurferCount(spotId);
             setSurferCount(newCount);
-            // Refresh conditions to update UI with new surfer count
-            loadData();
+            
+            // Force refresh the UI
             Alert.alert('Success', 'You have checked out from this spot!');
           } else {
             Alert.alert('Error', 'Failed to check out. Please try again.');
@@ -174,8 +174,10 @@ const SpotDetailsScreen: React.FC = () => {
         // In a real app, you would get the actual userId from auth state
         const userId = 'test-user-id';
 
-        // Check if user is already checked in somewhere else
+        // Recheck if user is already checked in somewhere else
         const existingCheckIn = await getActiveCheckInForUserAnywhere(userId);
+        
+        console.log(`[DEBUG] Existing check-in when trying to check in at ${spotId}:`, existingCheckIn);
         
         if (existingCheckIn && existingCheckIn.spotId !== spotId) {
           // User is already checked in elsewhere
@@ -217,7 +219,6 @@ const SpotDetailsScreen: React.FC = () => {
                         setCheckInId(checkIn.id);
                         const newCount = await getSurferCount(spotId);
                         setSurferCount(newCount);
-                        loadData();
                         Alert.alert('Success', 'You have checked in to this spot!');
                       } else {
                         Alert.alert('Error', 'Failed to check in. Please try again.');
@@ -247,8 +248,6 @@ const SpotDetailsScreen: React.FC = () => {
           // Update surfer count (increment)
           const newCount = await getSurferCount(spotId);
           setSurferCount(newCount);
-          // Refresh conditions to update UI with new surfer count
-          loadData();
           Alert.alert('Success', 'You have checked in to this spot!');
         } else {
           Alert.alert('Error', 'Failed to check in. Please try again.');
