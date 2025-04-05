@@ -107,4 +107,75 @@ This document maintains a running list of tasks, enhancements, bug fixes, and te
 - [ ] Integrate weather radar
 - [ ] Add webcam viewing for popular spots
 - [ ] Create surf trip planning feature
-- [ ] Implement gear tracking and recommendations 
+- [ ] Implement gear tracking and recommendations
+
+To-Do List: Building SurfSUP
+Phase 1: Planning
+Goal: Establish the foundation for development.
+
+X Define Team & Roles - Decided to build solo with support from AI tools.
+X Finalize Tech Stack - Confirmed: React Native (mobile), Node.js, PostgreSQL, Git, Expo and React Native libraries.
+X Set Up Project Management - Using GitHub for tracking issues and features.
+X API Access & Documentation - Selected APIs for surf conditions data.
+X Budget & Timeline - Established project timeline with milestones.
+X Wireframes & Design - Created basic design with color palette and component styles.
+
+Phase 2: Development
+Goal: Build the MVP with core features.
+
+X Set Up Development Environment
+  X Install React Native, Node.js, Git locally.
+  X Initialize Git repository with proper structure.
+  X Create project structure.
+  X Set up linting and code formatting.
+  X Set up testing framework.
+
+X Backend Setup (Partial - Mock Implementation)
+  X Build data models with TypeScript interfaces.
+  X Create mock API endpoints for conditions data.
+  X Implement data fetching for surf spots.
+  X Add local storage utilities for persisting favorites and sessions.
+
+X Core Components
+  X Set up navigation system.
+  X Create reusable components (buttons, cards, badges).
+  X Implement location services.
+  X Add formatters and utility functions.
+
+Frontend Screens
+  □ Home Screen - Implement surf conditions view.
+  □ Map View - Implement map with surf spot pins.
+  □ Favorites Screen - Implement favorite spots list.
+  □ Profile Screen - Implement user profile.
+  □ Detail Screens - Implement spot details and sessions.
+  □ Check-in & Log Screens - Implement session logging.
+
+Authentication & User Management
+  □ Build authentication screens.
+  □ Implement local user profiles.
+  □ Add user preferences.
+
+Phase 3: Testing
+Goal: Ensure functionality, performance, and usability.
+
+X Write unit tests for utilities - Created tests for formatters and location utilities.
+□ Test navigation flows.
+□ Test API failure handling.
+□ Test offline functionality.
+□ Conduct user testing.
+
+Phase 4: Launch
+Goal: Release MVP and grow initial user base.
+
+□ Package app for iOS/Android.
+□ Prepare for app store submission.
+□ Create promotional materials.
+□ Design onboarding experience.
+
+Ongoing: Post-MVP
+Goal: Iterate and scale beyond Lake Superior.
+
+□ Add push notifications.
+□ Implement social features.
+□ Add premium features.
+□ Expand to more locations. 
