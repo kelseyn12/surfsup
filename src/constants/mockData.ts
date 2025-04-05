@@ -92,7 +92,7 @@ export const MOCK_SURF_SPOTS: SurfSpot[] = [
     difficulty: 'intermediate',
     type: ['point-break'],
     amenities: ['parking'],
-    description: 'One of California's most perfect and high-performance waves.',
+    description: 'One of California\'s most perfect and high-performance waves.',
     imageUrls: [
       'https://images.unsplash.com/photo-1455729552865-3658a5d39692',
     ],
@@ -102,7 +102,7 @@ export const MOCK_SURF_SPOTS: SurfSpot[] = [
   },
   {
     id: 'spot-5',
-    name: 'Black's Beach',
+    name: 'Black\'s Beach',
     location: {
       latitude: 32.8898,
       longitude: -117.2591,
