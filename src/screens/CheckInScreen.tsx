@@ -37,17 +37,46 @@ const CheckInScreen: React.FC = () => {
   // Form state
   const [rating, setRating] = useState(3);
   const [notes, setNotes] = useState('');
-  const [conditions, setConditions] = useState<Partial<SurfConditions>>({
-    waveHeight: 3.0,
-    windSpeed: 15,
-    windDirection: 'northeast',
-    swellPeriod: 6,
-    waterTemp: 38,
-  });
+  const [waveHeight, setWaveHeight] = useState(3.0);
+  const [windSpeed, setWindSpeed] = useState(15);
+  const [windDirection, setWindDirection] = useState('northeast');
+  const [swellPeriod, setSwellPeriod] = useState(6);
+  const [waterTemp, setWaterTemp] = useState(38);
 
   // Submit check-in
   const handleSubmit = () => {
     // In a real app, you would save this to storage or API
+    const surfConditions: Partial<SurfConditions> = {
+      spotId: spotId,
+      timestamp: currentDate.toISOString(),
+      waveHeight: {
+        min: waveHeight - 0.5,
+        max: waveHeight + 0.5,
+        unit: 'ft'
+      },
+      wind: {
+        speed: windSpeed,
+        direction: windDirection.toUpperCase().substr(0, 2),
+        unit: 'mph'
+      },
+      swell: [{
+        height: waveHeight,
+        period: swellPeriod,
+        direction: windDirection.toUpperCase().substr(0, 2)
+      }],
+      tide: {
+        current: 0, // Lake Superior doesn't have significant tides
+        unit: 'ft'
+      },
+      weather: {
+        temperature: waterTemp,
+        condition: 'reported by user',
+        unit: 'F'
+      },
+      rating: rating * 2, // Convert 1-5 scale to 1-10
+      source: 'user-report'
+    };
+    
     console.log('Check-in submitted', { 
       spotId, 
       spotName: spot?.name,
@@ -55,7 +84,7 @@ const CheckInScreen: React.FC = () => {
       time: formattedTime,
       rating,
       notes,
-      conditions
+      conditions: surfConditions
     });
 
     // Show success message and navigate back
@@ -108,20 +137,14 @@ const CheckInScreen: React.FC = () => {
             <View style={styles.conditionInputContainer}>
               <TouchableOpacity
                 style={styles.conditionButton}
-                onPress={() => setConditions({
-                  ...conditions,
-                  waveHeight: Math.max(0, (conditions.waveHeight || 0) - 0.5)
-                })}
+                onPress={() => setWaveHeight(Math.max(0, waveHeight - 0.5))}
               >
                 <Ionicons name="remove" size={20} color={COLORS.text.primary} />
               </TouchableOpacity>
-              <Text style={styles.conditionValue}>{conditions.waveHeight}</Text>
+              <Text style={styles.conditionValue}>{waveHeight}</Text>
               <TouchableOpacity
                 style={styles.conditionButton}
-                onPress={() => setConditions({
-                  ...conditions,
-                  waveHeight: (conditions.waveHeight || 0) + 0.5
-                })}
+                onPress={() => setWaveHeight(waveHeight + 0.5)}
               >
                 <Ionicons name="add" size={20} color={COLORS.text.primary} />
               </TouchableOpacity>
@@ -129,24 +152,18 @@ const CheckInScreen: React.FC = () => {
           </View>
 
           <View style={styles.conditionRow}>
-            <Text style={styles.conditionLabel}>Wind Speed (kn)</Text>
+            <Text style={styles.conditionLabel}>Wind Speed (mph)</Text>
             <View style={styles.conditionInputContainer}>
               <TouchableOpacity
                 style={styles.conditionButton}
-                onPress={() => setConditions({
-                  ...conditions,
-                  windSpeed: Math.max(0, (conditions.windSpeed || 0) - 1)
-                })}
+                onPress={() => setWindSpeed(Math.max(0, windSpeed - 1))}
               >
                 <Ionicons name="remove" size={20} color={COLORS.text.primary} />
               </TouchableOpacity>
-              <Text style={styles.conditionValue}>{conditions.windSpeed}</Text>
+              <Text style={styles.conditionValue}>{windSpeed}</Text>
               <TouchableOpacity
                 style={styles.conditionButton}
-                onPress={() => setConditions({
-                  ...conditions,
-                  windSpeed: (conditions.windSpeed || 0) + 1
-                })}
+                onPress={() => setWindSpeed(windSpeed + 1)}
               >
                 <Ionicons name="add" size={20} color={COLORS.text.primary} />
               </TouchableOpacity>
@@ -158,20 +175,14 @@ const CheckInScreen: React.FC = () => {
             <View style={styles.conditionInputContainer}>
               <TouchableOpacity
                 style={styles.conditionButton}
-                onPress={() => setConditions({
-                  ...conditions,
-                  swellPeriod: Math.max(0, (conditions.swellPeriod || 0) - 1)
-                })}
+                onPress={() => setSwellPeriod(Math.max(0, swellPeriod - 1))}
               >
                 <Ionicons name="remove" size={20} color={COLORS.text.primary} />
               </TouchableOpacity>
-              <Text style={styles.conditionValue}>{conditions.swellPeriod}</Text>
+              <Text style={styles.conditionValue}>{swellPeriod}</Text>
               <TouchableOpacity
                 style={styles.conditionButton}
-                onPress={() => setConditions({
-                  ...conditions,
-                  swellPeriod: (conditions.swellPeriod || 0) + 1
-                })}
+                onPress={() => setSwellPeriod(swellPeriod + 1)}
               >
                 <Ionicons name="add" size={20} color={COLORS.text.primary} />
               </TouchableOpacity>
@@ -183,20 +194,14 @@ const CheckInScreen: React.FC = () => {
             <View style={styles.conditionInputContainer}>
               <TouchableOpacity
                 style={styles.conditionButton}
-                onPress={() => setConditions({
-                  ...conditions,
-                  waterTemp: Math.max(32, (conditions.waterTemp || 38) - 1)
-                })}
+                onPress={() => setWaterTemp(Math.max(32, waterTemp - 1))}
               >
                 <Ionicons name="remove" size={20} color={COLORS.text.primary} />
               </TouchableOpacity>
-              <Text style={styles.conditionValue}>{conditions.waterTemp}</Text>
+              <Text style={styles.conditionValue}>{waterTemp}</Text>
               <TouchableOpacity
                 style={styles.conditionButton}
-                onPress={() => setConditions({
-                  ...conditions,
-                  waterTemp: (conditions.waterTemp || 38) + 1
-                })}
+                onPress={() => setWaterTemp(waterTemp + 1)}
               >
                 <Ionicons name="add" size={20} color={COLORS.text.primary} />
               </TouchableOpacity>
@@ -211,17 +216,14 @@ const CheckInScreen: React.FC = () => {
                   key={direction}
                   style={[
                     styles.windDirectionButton,
-                    conditions.windDirection === direction ? { backgroundColor: COLORS.primary } : {}
+                    windDirection === direction ? { backgroundColor: COLORS.primary } : {}
                   ]}
-                  onPress={() => setConditions({
-                    ...conditions,
-                    windDirection: direction
-                  })}
+                  onPress={() => setWindDirection(direction)}
                 >
                   <Text
                     style={[
                       styles.windDirectionText,
-                      conditions.windDirection === direction ? { color: COLORS.white } : {}
+                      windDirection === direction ? { color: COLORS.white } : {}
                     ]}
                   >
                     {direction.charAt(0).toUpperCase()}

@@ -60,7 +60,7 @@ const HomeScreen: React.FC = () => {
           >
             <Text style={styles.spotName}>Lester River</Text>
             <Text style={[styles.spotCondition, { color: COLORS.surfConditions.excellent }]}>Excellent</Text>
-            <Text style={styles.spotDetails}>3-5ft • a10s • Glassy</Text>
+            <Text style={styles.spotDetails}>3-5ft • 10s • Glassy</Text>
           </TouchableOpacity>
         </View>
       </View>

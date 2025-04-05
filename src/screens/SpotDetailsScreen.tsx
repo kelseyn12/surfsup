@@ -23,13 +23,34 @@ const SpotDetailsScreen: React.FC = () => {
 
   // Mock current conditions for Lake Superior
   const currentConditions: SurfConditions = {
-    waveHeight: 3.5,
-    windSpeed: 15,
-    windDirection: 'northeast',
-    waterTemp: 38,
-    swellPeriod: 6,
-    swellDirection: 'NE',
-    tide: 'n/a', // Lake Superior doesn't have significant tides
+    spotId: spotId || '0',
+    timestamp: new Date().toISOString(),
+    waveHeight: {
+      min: 3.0,
+      max: 4.0,
+      unit: 'ft'
+    },
+    wind: {
+      speed: 15,
+      direction: 'NE',
+      unit: 'mph'
+    },
+    swell: [{
+      height: 3.5,
+      period: 6,
+      direction: 'NE'
+    }],
+    tide: {
+      current: 0,
+      unit: 'ft'
+    },
+    weather: {
+      temperature: 38,
+      condition: 'partly cloudy',
+      unit: 'F'
+    },
+    rating: 7,
+    source: 'forecast'
   };
 
   // Mock forecast data for Lake Superior
@@ -93,24 +114,24 @@ const SpotDetailsScreen: React.FC = () => {
             <View style={styles.conditionItem}>
               <Ionicons name="water-outline" size={24} color={COLORS.primary} />
               <Text style={styles.conditionLabel}>Wave Height</Text>
-              <Text style={styles.conditionValue}>{currentConditions.waveHeight}ft</Text>
+              <Text style={styles.conditionValue}>{currentConditions.waveHeight.min}-{currentConditions.waveHeight.max} {currentConditions.waveHeight.unit}</Text>
             </View>
             <View style={styles.conditionItem}>
               <Ionicons name="time-outline" size={24} color={COLORS.primary} />
               <Text style={styles.conditionLabel}>Period</Text>
-              <Text style={styles.conditionValue}>{currentConditions.swellPeriod}s</Text>
+              <Text style={styles.conditionValue}>{currentConditions.swell[0].period}s</Text>
             </View>
           </View>
           <View style={styles.conditionRow}>
             <View style={styles.conditionItem}>
               <Ionicons name="speedometer-outline" size={24} color={COLORS.primary} />
               <Text style={styles.conditionLabel}>Wind</Text>
-              <Text style={styles.conditionValue}>{currentConditions.windSpeed}kn {currentConditions.windDirection}</Text>
+              <Text style={styles.conditionValue}>{currentConditions.wind.speed}{currentConditions.wind.unit === 'mph' ? 'mph' : 'kn'} {currentConditions.wind.direction}</Text>
             </View>
             <View style={styles.conditionItem}>
               <Ionicons name="thermometer-outline" size={24} color={COLORS.primary} />
               <Text style={styles.conditionLabel}>Water Temp</Text>
-              <Text style={styles.conditionValue}>{currentConditions.waterTemp}°F</Text>
+              <Text style={styles.conditionValue}>{currentConditions.weather.temperature}°{currentConditions.weather.unit}</Text>
             </View>
           </View>
         </View>
