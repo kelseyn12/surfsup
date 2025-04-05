@@ -6,6 +6,7 @@ import { MainTabScreenProps } from '../navigation/types';
 import { COLORS } from '../constants';
 import { SurfSpot } from '../types';
 import { fetchNearbySurfSpots } from '../services/api';
+import { eventEmitter, AppEvents } from '../services/events';
 
 // In a full implementation, we would import and use a map component like:
 // import MapView, { Marker, Region, PROVIDER_GOOGLE } from 'react-native-maps';
@@ -27,6 +28,28 @@ const MapScreen: React.FC = () => {
   // Load spots when component mounts
   useEffect(() => {
     loadSurfSpots();
+
+    // Listen for surfer count updates
+    const handleSurferCountUpdate = (data: { spotId: string, count: number }) => {
+      console.log(`[EVENT] Surfer count updated for ${data.spotId}: ${data.count}`);
+      
+      // Update the surfer count for the specific spot
+      setSurfSpots(currentSpots => 
+        currentSpots.map(spot => 
+          spot.id === data.spotId 
+            ? { ...spot, currentSurferCount: data.count } 
+            : spot
+        )
+      );
+    };
+
+    // Register event listener
+    eventEmitter.on(AppEvents.SURFER_COUNT_UPDATED, handleSurferCountUpdate);
+
+    // Cleanup listener on unmount
+    return () => {
+      eventEmitter.off(AppEvents.SURFER_COUNT_UPDATED, handleSurferCountUpdate);
+    };
   }, []);
 
   // Refresh spots when screen comes into focus (e.g., after check-in/check-out)

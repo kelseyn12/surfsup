@@ -1,5 +1,6 @@
 import { API, TIMEOUTS } from '../constants';
 import { SurfConditions, SurfSpot, WindyApiResponse, NoaaApiResponse, NdbcBuoyResponse, CheckIn } from '../types';
+import { emitSurferCountUpdated, emitCheckInStatusChanged } from './events';
 
 /**
  * API Service
@@ -355,6 +356,10 @@ export const checkInToSpot = async (
     console.log(`[DEBUG] User ${userId} checked in at ${spotId}. Current check-ins:`, activeCheckIns);
     console.log(`[DEBUG] Updated surfer counts:`, activeSurferCounts);
     
+    // Emit events to notify other parts of the app
+    emitCheckInStatusChanged(spotId, true);
+    emitSurferCountUpdated(spotId, activeSurferCounts[spotId]);
+    
     return checkIn;
   } catch (error) {
     console.error('Error checking in to spot:', error);
@@ -397,6 +402,10 @@ export const checkOutFromSpot = async (checkInId: string): Promise<boolean> => {
       
       console.log(`[DEBUG] Successfully checked out from ${foundSpotId}. Updated check-ins:`, activeCheckIns);
       console.log(`[DEBUG] Updated surfer counts:`, activeSurferCounts);
+      
+      // Emit events to notify other parts of the app
+      emitCheckInStatusChanged(foundSpotId, false);
+      emitSurferCountUpdated(foundSpotId, activeSurferCounts[foundSpotId]);
       
       return true;
     }

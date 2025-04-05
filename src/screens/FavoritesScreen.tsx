@@ -15,6 +15,7 @@ import { COLORS } from '../constants';
 import { SurfSpot } from '../types';
 import { SurfSpotCard } from '../components';
 import { getSurferCount } from '../services/api';
+import { eventEmitter, AppEvents } from '../services/events';
 
 const FavoritesScreen: React.FC = () => {
   const navigation = useNavigation<MainTabScreenProps<'Favorites'>['navigation']>();
@@ -80,6 +81,25 @@ const FavoritesScreen: React.FC = () => {
   useEffect(() => {
     // Load initial surfer counts
     loadSurferCounts();
+
+    // Listen for surfer count updates
+    const handleSurferCountUpdate = (data: { spotId: string, count: number }) => {
+      console.log(`[EVENT] Surfer count updated for ${data.spotId}: ${data.count}`);
+      
+      // Update the surfer count for the specific spot
+      setSurferCounts(currentCounts => ({
+        ...currentCounts,
+        [data.spotId]: data.count
+      }));
+    };
+
+    // Register event listener
+    eventEmitter.on(AppEvents.SURFER_COUNT_UPDATED, handleSurferCountUpdate);
+
+    // Cleanup listener on unmount
+    return () => {
+      eventEmitter.off(AppEvents.SURFER_COUNT_UPDATED, handleSurferCountUpdate);
+    };
   }, []);
 
   // Refresh surfer counts when screen comes into focus

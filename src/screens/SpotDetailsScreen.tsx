@@ -15,6 +15,7 @@ import { RootStackScreenProps } from '../navigation/types';
 import { COLORS } from '../constants';
 import { SurfConditions } from '../types';
 import { fetchSurfConditions, fetchSurfForecast, checkInToSpot, checkOutFromSpot, getSurferCount, getActiveCheckInForUser, getActiveCheckInForUserAnywhere, fetchNearbySurfSpots } from '../services/api';
+import { eventEmitter, AppEvents } from '../services/events';
 
 const SpotDetailsScreen: React.FC = () => {
   const route = useRoute<RootStackScreenProps<'SpotDetails'>['route']>();
@@ -41,6 +42,14 @@ const SpotDetailsScreen: React.FC = () => {
     React.useCallback(() => {
       console.log(`[DEBUG] Screen focused for spot ${spotId}, checking check-in status`);
       checkExistingCheckIn();
+      
+      // Also fetch the latest surfer count
+      const updateSurferCount = async () => {
+        const count = await getSurferCount(spotId);
+        setSurferCount(count);
+      };
+      updateSurferCount();
+      
       return () => {};
     }, [spotId])
   );
