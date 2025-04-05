@@ -49,6 +49,9 @@ export interface SurfSpot {
   buoyIds?: string[]; // IDs of nearby buoys for data
   createdAt: string;
   updatedAt: string;
+  // Real-time data
+  currentSurferCount?: number; // Number of active check-ins
+  lastActivityUpdate?: string; // Timestamp of last activity update
 }
 
 // Current or forecasted surf conditions
@@ -85,6 +88,7 @@ export interface SurfConditions {
   };
   rating: number; // 1-10 rating of overall conditions
   source: string; // 'windy', 'noaa', 'buoy', etc.
+  surferCount?: number; // Number of current surfers at the spot
 }
 
 // User check-ins at surf spots
@@ -93,6 +97,8 @@ export interface CheckIn {
   userId: string;
   spotId: string;
   timestamp: string;
+  expiresAt?: string; // When the check-in automatically expires
+  isActive: boolean; // Whether the user is still at the spot
   conditions?: {
     waveHeight: number;
     crowdLevel: 'empty' | 'uncrowded' | 'moderate' | 'crowded' | 'very-crowded';

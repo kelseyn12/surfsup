@@ -4,20 +4,24 @@ Product Requirements Document (PRD): SurfSUP
 SurfSUP
 
 1.2 Purpose
-SurfSUP is a scalable mobile/web app for surfers to monitor conditions, share plans (Friends or Public), log sessions, and connect—starting with Lake Superior, expandable globally.
+SurfSUP is a specialized app for Lake Superior surfers that provides real-time conditions, forecasts, and a community platform to connect with fellow surfers. The app's primary goal is to help users find optimal surf conditions, track their sessions, and build a community of Great Lakes surfers.
 
 1.3 Target Audience
-Initial: Lake Superior surfers (~100-200 users in MN, WI, MI, ON).
-Future: Surfers worldwide.
+Experienced Lake Superior surfers (primary)
+Beginner/intermediate surfers curious about Lake Superior
+Surfing enthusiasts visiting the Duluth area
+Kitesurfers, windsurfers, and other wave sport enthusiasts
 1.4 Platform
 Mobile-first (iOS/Android) using React Native.
 Responsive web version using React.
 1.5 Launch Timeline
 Target: Summer 2025 (aligns with Lake Superior buoy season).
 1.6 Success Metrics
-MVP Goal: 50-100 active users in first 6 months.
-Engagement: 70% of users logging sessions or using "I'm Heading Out" weekly.
-Scalability: Framework supports expansion to 1,000+ users and new regions.
+MVP Goal: 50% of Lake Superior surfing community.
+Engagement: Average of 2 sessions logged per active user per month.
+Retention: 80% monthly active user retention.
+Accuracy: Conditions matching user reports at least 85% of the time.
+Growth: 25% user base increase year-over-year.
 2. Objectives
 2.1 Business Objectives
 Build a loyal Lake Superior surf community.
@@ -221,4 +225,21 @@ Mitigation: Highlight ice %; add "ice-out" reports.
 Park Point, Lester River, French River, GuardRails, Boulders, Stoney Point.
 10.2 Future Considerations
 Skill-level filters for global expansion.
-Chat feature if community demands it. 
+Chat feature if community demands it.
+10.3 Real-Time Surfer Count Feature
+Description
+SurfSUP includes a real-time surfer count feature to help users find optimal surf conditions.
+
+Requirements
+Surfer count system: Shows how many people are currently at each spot.
+Check-in mechanism: Surfers can mark their arrival at a spot.
+Activity indicators: No surfers, Low activity, Active, Crowded.
+Automatic expiration: Check-ins expire after a preset time period.
+Manual check-out: Surfers can mark themselves as out of the water.
+Privacy options: Users can control visibility of their check-ins.
+Activity history: Shows recent surfer counts at popular spots.
+Acceptance Criteria
+Surfer count updates in real-time.
+Check-in and check-out functionality works as expected.
+Privacy settings are respected.
+Activity history is accurate and useful. 

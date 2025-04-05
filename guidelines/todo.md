@@ -141,6 +141,14 @@ X Core Components
   X Create reusable components (buttons, cards, badges).
   X Implement location services.
   X Add formatters and utility functions.
+  X Add surfer count display to SurfSpotCard component.
+
+Real-Time Surfer Count Feature
+  □ Implement check-in mechanism in SpotDetailsScreen.
+  □ Add surfer activity indicator to map pins.
+  □ Create check-out functionality with auto-expiration timer.
+  □ Add privacy settings for check-ins.
+  □ Implement surfer count history.
 
 Frontend Screens
   □ Home Screen - Implement surf conditions view.
@@ -162,6 +170,7 @@ X Write unit tests for utilities - Created tests for formatters and location uti
 □ Test navigation flows.
 □ Test API failure handling.
 □ Test offline functionality.
+□ Test surfer count check-in/check-out system.
 □ Conduct user testing.
 
 Phase 4: Launch

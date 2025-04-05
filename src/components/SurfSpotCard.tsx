@@ -13,6 +13,7 @@ interface SurfSpotCardProps {
   onToggleFavorite?: () => void;
   showConditions?: boolean;
   compact?: boolean;
+  surferCount?: number;
 }
 
 const SurfSpotCard: React.FC<SurfSpotCardProps> = ({
@@ -21,6 +22,7 @@ const SurfSpotCard: React.FC<SurfSpotCardProps> = ({
   onToggleFavorite,
   showConditions = true,
   compact = false,
+  surferCount = 0,
 }) => {
   const navigation = useNavigation();
   const [conditions, setConditions] = useState<SurfConditions | null>(null);
@@ -71,6 +73,22 @@ const SurfSpotCard: React.FC<SurfSpotCardProps> = ({
       default:
         return COLORS.gray;
     }
+  };
+
+  // Get appropriate surfer activity label
+  const getSurferActivityLabel = (count: number): string => {
+    if (count === 0) return 'No surfers';
+    if (count < 3) return 'Low activity';
+    if (count < 8) return 'Active';
+    return 'Crowded';
+  };
+
+  // Get color for surfer count badge
+  const getSurferCountColor = (count: number): string => {
+    if (count === 0) return COLORS.gray;
+    if (count < 3) return COLORS.success;
+    if (count < 8) return COLORS.warning;
+    return COLORS.error;
   };
 
   const renderConditions = () => {
@@ -159,6 +177,17 @@ const SurfSpotCard: React.FC<SurfSpotCardProps> = ({
               />
             </TouchableOpacity>
           )}
+
+          {/* Surfer count badge */}
+          <View 
+            style={[
+              styles.surferCountBadge, 
+              { backgroundColor: getSurferCountColor(surferCount) }
+            ]}
+          >
+            <Ionicons name="people" size={12} color={COLORS.white} />
+            <Text style={styles.surferCountText}>{surferCount}</Text>
+          </View>
         </View>
         
         <View style={styles.infoContainer}>
@@ -186,7 +215,21 @@ const SurfSpotCard: React.FC<SurfSpotCardProps> = ({
             </Text>
           )}
           
-          {!compact && renderConditions()}
+          {!compact && (
+            <View style={styles.bottomRow}>
+              {renderConditions()}
+              
+              {/* Surfer activity label - shown only in full card view */}
+              <View style={[
+                styles.activityBadge,
+                { backgroundColor: getSurferCountColor(surferCount) }
+              ]}>
+                <Text style={styles.activityText}>
+                  {getSurferActivityLabel(surferCount)}
+                </Text>
+              </View>
+            </View>
+          )}
         </View>
       </View>
     </TouchableOpacity>
@@ -273,9 +316,15 @@ const styles = StyleSheet.create({
     color: COLORS.text.primary,
     marginBottom: 12,
   },
+  bottomRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
   conditionsContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    flex: 1,
   },
   ratingBadge: {
     paddingHorizontal: 8,
@@ -315,6 +364,34 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: COLORS.error,
   },
+  surferCountBadge: {
+    position: 'absolute',
+    bottom: 8,
+    left: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+    borderRadius: 12,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+  },
+  surferCountText: {
+    color: COLORS.white,
+    fontSize: 10,
+    fontWeight: 'bold',
+    marginLeft: 2,
+  },
+  activityBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+    alignSelf: 'flex-start',
+  },
+  activityText: {
+    color: COLORS.white,
+    fontSize: 12,
+    fontWeight: '500',
+  }
 });
 
 export default SurfSpotCard; 

@@ -1,5 +1,5 @@
 import { API, TIMEOUTS } from '../constants';
-import { SurfConditions, SurfSpot, WindyApiResponse, NoaaApiResponse, NdbcBuoyResponse } from '../types';
+import { SurfConditions, SurfSpot, WindyApiResponse, NoaaApiResponse, NdbcBuoyResponse, CheckIn } from '../types';
 
 /**
  * API Service
@@ -55,6 +55,9 @@ export const fetchSurfConditions = async (spotId: string): Promise<SurfCondition
     // Simulate API latency
     await new Promise(resolve => setTimeout(resolve, 1000));
     
+    // Get current surfer count
+    const surferCount = await getSurferCount(spotId);
+    
     // Mock response based on spot ID
     // In production, this would make real API calls to Windy, NOAA, or NDBC
     const mockCondition: SurfConditions = {
@@ -92,6 +95,7 @@ export const fetchSurfConditions = async (spotId: string): Promise<SurfCondition
       },
       rating: 7,
       source: 'mock-data',
+      surferCount,
     };
     
     return mockCondition;
@@ -153,6 +157,7 @@ export const fetchSurfForecast = async (spotId: string, days = 7): Promise<SurfC
         },
         rating: Math.round(5 + Math.sin(i / 4) * 3),
         source: 'mock-forecast',
+        surferCount: i === 0 ? await getSurferCount(spotId) : undefined, // Only include current surfer count for the first timestamp
       });
     }
     
@@ -195,6 +200,8 @@ export const fetchNearbySurfSpots = async (
         amenities: ['parking'],
         description: 'Popular spot for Lake Superior surfers with consistent waves during NE winds.',
         imageUrls: ['https://example.com/stonypoint.jpg'],
+        currentSurferCount: 3,
+        lastActivityUpdate: new Date().toISOString(),
         createdAt: '2023-01-15T00:00:00.000Z',
         updatedAt: '2023-01-15T00:00:00.000Z',
       },
@@ -213,6 +220,8 @@ export const fetchNearbySurfSpots = async (
         amenities: ['parking', 'restrooms'],
         description: 'Long sandy beach with gentle waves, perfect for beginners during calm conditions.',
         imageUrls: ['https://example.com/parkpoint.jpg'],
+        currentSurferCount: 5,
+        lastActivityUpdate: new Date().toISOString(),
         createdAt: '2023-01-15T00:00:00.000Z',
         updatedAt: '2023-01-15T00:00:00.000Z',
       },
@@ -231,6 +240,8 @@ export const fetchNearbySurfSpots = async (
         amenities: ['parking'],
         description: 'River mouth break that works well during strong winds and storms.',
         imageUrls: ['https://example.com/lesterriver.jpg'],
+        currentSurferCount: 2,
+        lastActivityUpdate: new Date().toISOString(),
         createdAt: '2023-01-15T00:00:00.000Z',
         updatedAt: '2023-01-15T00:00:00.000Z',
       },
@@ -249,6 +260,8 @@ export const fetchNearbySurfSpots = async (
         amenities: ['parking'],
         description: 'Powerful break near the canal entrance. For experienced surfers only.',
         imageUrls: ['https://example.com/superiorentry.jpg'],
+        currentSurferCount: 0,
+        lastActivityUpdate: new Date().toISOString(),
         createdAt: '2023-01-15T00:00:00.000Z',
         updatedAt: '2023-01-15T00:00:00.000Z',
       },
@@ -264,10 +277,93 @@ export const fetchNearbySurfSpots = async (
 };
 
 /**
+ * Get the current active surfer count for a spot
+ * This is a mock implementation
+ */
+export const getSurferCount = async (spotId: string): Promise<number> => {
+  try {
+    // Simulate API latency
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    // In a real implementation, this would query active check-ins
+    // For now, just return mock data based on spot ID
+    const mockCounts: Record<string, number> = {
+      'stonypoint': 3,
+      'parkpoint': 5,
+      'lesterriver': 2,
+      'superiorentry': 0,
+    };
+    
+    return mockCounts[spotId] || 0;
+  } catch (error) {
+    console.error('Error getting surfer count:', error);
+    return 0;
+  }
+};
+
+/**
+ * Check in to a surf spot
+ * This will increment the surfer count for the spot
+ */
+export const checkInToSpot = async (
+  userId: string, 
+  spotId: string, 
+  data?: Partial<CheckIn>
+): Promise<CheckIn | null> => {
+  try {
+    // Simulate API latency
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    // In a real implementation, this would create a check-in record
+    // and update the surfer count for the spot
+    
+    // Calculate expiration time (2 hours from now by default)
+    const now = new Date();
+    const expiresAt = new Date(now.getTime() + 2 * 60 * 60 * 1000).toISOString();
+    
+    const checkIn: CheckIn = {
+      id: `checkin-${Date.now()}`,
+      userId,
+      spotId,
+      timestamp: now.toISOString(),
+      expiresAt,
+      isActive: true,
+      conditions: data?.conditions,
+      comment: data?.comment,
+      imageUrls: data?.imageUrls,
+    };
+    
+    return checkIn;
+  } catch (error) {
+    console.error('Error checking in to spot:', error);
+    return null;
+  }
+};
+
+/**
+ * Check out from a surf spot
+ * This will decrement the surfer count for the spot
+ */
+export const checkOutFromSpot = async (checkInId: string): Promise<boolean> => {
+  try {
+    // Simulate API latency
+    await new Promise(resolve => setTimeout(resolve, 800));
+    
+    // In a real implementation, this would update the check-in record
+    // and decrement the surfer count for the spot
+    
+    return true;
+  } catch (error) {
+    console.error('Error checking out from spot:', error);
+    return false;
+  }
+};
+
+/**
  * Submits a check-in to the backend
  * This is a mock implementation
  */
-export const submitCheckIn = async (checkInData: Omit<CheckIn, 'id' | 'timestamp'>): Promise<CheckIn | null> => {
+export const submitCheckIn = async (checkInData: Omit<CheckIn, 'id' | 'timestamp' | 'expiresAt' | 'isActive'>): Promise<CheckIn | null> => {
   try {
     // Simulate API latency
     await new Promise(resolve => setTimeout(resolve, 1200));
@@ -275,11 +371,16 @@ export const submitCheckIn = async (checkInData: Omit<CheckIn, 'id' | 'timestamp
     // In a real implementation, this would post to a backend API
     // For now, we'll create a mock response
     
+    const now = new Date();
+    const expiresAt = new Date(now.getTime() + 2 * 60 * 60 * 1000).toISOString();
+    
     const checkIn: CheckIn = {
       id: `checkin-${Date.now()}`,
       userId: checkInData.userId,
       spotId: checkInData.spotId,
-      timestamp: new Date().toISOString(),
+      timestamp: now.toISOString(),
+      expiresAt,
+      isActive: true,
       conditions: checkInData.conditions,
       comment: checkInData.comment,
       imageUrls: checkInData.imageUrls,
