@@ -12,31 +12,33 @@ const MapScreen: React.FC = () => {
   const navigation = useNavigation<MainTabScreenProps<'Map'>['navigation']>();
   const [isLoading, setIsLoading] = useState(false);
 
-  // Placeholder for map region state
+  // Placeholder for map region state - centered on Lake Superior near Duluth
   const [region, setRegion] = useState({
-    latitude: 37.7749,
-    longitude: -122.4194,
-    latitudeDelta: 0.0922,
-    longitudeDelta: 0.0421,
+    latitude: 46.7867, 
+    longitude: -92.0805, 
+    latitudeDelta: 0.5,
+    longitudeDelta: 0.5,
   });
 
-  // Mock data for surf spots
+  // Mock data for surf spots on Lake Superior
   const surfSpots = [
-    { id: '1', name: 'Pacifica', latitude: 37.5999, longitude: -122.5019, rating: 'Good' },
-    { id: '2', name: 'Ocean Beach', latitude: 37.7594, longitude: -122.5107, rating: 'Fair' },
-    { id: '3', name: 'Half Moon Bay', latitude: 37.4935, longitude: -122.5022, rating: 'Excellent' },
+    { id: '1', name: 'Stoney Point', latitude: 46.9463, longitude: -91.8944, rating: 'Good' },
+    { id: '2', name: 'Park Point', latitude: 46.7616, longitude: -92.0593, rating: 'Fair' },
+    { id: '3', name: 'Lester River', latitude: 46.8330, longitude: -92.0070, rating: 'Excellent' },
+    { id: '4', name: 'Brighton Beach', latitude: 46.8450, longitude: -92.0024, rating: 'Good' },
+    { id: '5', name: 'The Cribs', latitude: 46.8049, longitude: -91.9949, rating: 'Fair' },
   ];
 
   // Placeholder function for finding user's location
   const findMyLocation = () => {
     setIsLoading(true);
     setTimeout(() => {
-      // Mock location finding
+      // Mock location finding - centered on Duluth
       setRegion({
-        latitude: 37.7749,
-        longitude: -122.4194,
-        latitudeDelta: 0.0922,
-        longitudeDelta: 0.0421,
+        latitude: 46.7867,
+        longitude: -92.0805,
+        latitudeDelta: 0.5,
+        longitudeDelta: 0.5,
       });
       setIsLoading(false);
     }, 1000);
@@ -51,9 +53,9 @@ const MapScreen: React.FC = () => {
     <View style={styles.container}>
       {/* This is a placeholder for the actual map component */}
       <View style={styles.mapPlaceholder}>
-        <Text style={styles.mapPlaceholderText}>Map View</Text>
+        <Text style={styles.mapPlaceholderText}>Lake Superior Surf Map</Text>
         <Text style={styles.mapPlaceholderSubText}>
-          In a real implementation, this would be a MapView component showing surf spots
+          In a real implementation, this would be a MapView component showing Lake Superior surf spots
         </Text>
         
         {/* Placeholder for marker indicators */}
@@ -69,6 +71,8 @@ const MapScreen: React.FC = () => {
                     : spot.rating === 'Good' 
                       ? COLORS.surfConditions.good 
                       : COLORS.surfConditions.fair,
+                top: Math.random() * 200 + 100,
+                left: Math.random() * 200 + 75,
               }
             ]}
             onPress={() => handleMarkerPress(spot.id, spot.name)}

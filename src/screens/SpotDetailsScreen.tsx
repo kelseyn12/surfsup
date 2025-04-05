@@ -21,24 +21,24 @@ const SpotDetailsScreen: React.FC = () => {
   const { spotId, spot } = route.params || { spotId: '0', spot: { name: 'Unknown Spot' } };
   const [isFavorite, setIsFavorite] = useState(false);
 
-  // Mock current conditions
+  // Mock current conditions for Lake Superior
   const currentConditions: SurfConditions = {
     waveHeight: 3.5,
-    windSpeed: 5,
-    windDirection: 'offshore',
-    waterTemp: 62,
-    swellPeriod: 12,
-    swellDirection: 'W',
-    tide: 'rising',
+    windSpeed: 15,
+    windDirection: 'northeast',
+    waterTemp: 38,
+    swellPeriod: 6,
+    swellDirection: 'NE',
+    tide: 'n/a', // Lake Superior doesn't have significant tides
   };
 
-  // Mock forecast data
+  // Mock forecast data for Lake Superior
   const forecast = [
-    { day: 'Today', waveHeight: '3-4ft', period: '12s', wind: 'Offshore', rating: 'Good' },
-    { day: 'Tomorrow', waveHeight: '2-3ft', period: '15s', wind: 'Glassy', rating: 'Excellent' },
-    { day: 'Wed', waveHeight: '4-5ft', period: '10s', wind: 'Onshore', rating: 'Fair' },
-    { day: 'Thu', waveHeight: '3-4ft', period: '8s', wind: 'Cross-shore', rating: 'Fair' },
-    { day: 'Fri', waveHeight: '1-2ft', period: '7s', wind: 'Onshore', rating: 'Poor' },
+    { day: 'Today', waveHeight: '3-4ft', period: '6s', wind: 'NE 15mph', rating: 'Good' },
+    { day: 'Tomorrow', waveHeight: '4-6ft', period: '7s', wind: 'N 20mph', rating: 'Excellent' },
+    { day: 'Wed', waveHeight: '2-3ft', period: '5s', wind: 'NW 10mph', rating: 'Fair' },
+    { day: 'Thu', waveHeight: '1-2ft', period: '4s', wind: 'W 5mph', rating: 'Poor' },
+    { day: 'Fri', waveHeight: '3-4ft', period: '6s', wind: 'NE 15mph', rating: 'Good' },
   ];
 
   // Toggle favorite status
@@ -152,9 +152,9 @@ const SpotDetailsScreen: React.FC = () => {
         <Text style={styles.sectionTitle}>About This Spot</Text>
         <View style={styles.infoCard}>
           <Text style={styles.infoText}>
-            {spot?.name} is a popular surf spot known for consistent waves. 
-            It's suitable for intermediate to advanced surfers, with best conditions 
-            during low to mid tide with offshore winds.
+            {spot?.name} is a popular Lake Superior surf spot known for consistent waves during north and northeast winds. 
+            It works best during fall and winter months when winds are strongest.
+            Water temperatures can be very cold, ranging from 32-55°F depending on the season, so a thick wetsuit, boots, gloves, and hood are essential.
           </Text>
         </View>
       </View>

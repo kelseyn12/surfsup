@@ -39,9 +39,10 @@ const CheckInScreen: React.FC = () => {
   const [notes, setNotes] = useState('');
   const [conditions, setConditions] = useState<Partial<SurfConditions>>({
     waveHeight: 3.0,
-    windSpeed: 5,
-    windDirection: 'offshore',
-    swellPeriod: 12,
+    windSpeed: 15,
+    windDirection: 'northeast',
+    swellPeriod: 6,
+    waterTemp: 38,
   });
 
   // Submit check-in
@@ -178,9 +179,34 @@ const CheckInScreen: React.FC = () => {
           </View>
 
           <View style={styles.conditionRow}>
+            <Text style={styles.conditionLabel}>Water Temp (°F)</Text>
+            <View style={styles.conditionInputContainer}>
+              <TouchableOpacity
+                style={styles.conditionButton}
+                onPress={() => setConditions({
+                  ...conditions,
+                  waterTemp: Math.max(32, (conditions.waterTemp || 38) - 1)
+                })}
+              >
+                <Ionicons name="remove" size={20} color={COLORS.text.primary} />
+              </TouchableOpacity>
+              <Text style={styles.conditionValue}>{conditions.waterTemp}</Text>
+              <TouchableOpacity
+                style={styles.conditionButton}
+                onPress={() => setConditions({
+                  ...conditions,
+                  waterTemp: (conditions.waterTemp || 38) + 1
+                })}
+              >
+                <Ionicons name="add" size={20} color={COLORS.text.primary} />
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          <View style={styles.conditionRow}>
             <Text style={styles.conditionLabel}>Wind Direction</Text>
             <View style={styles.windDirectionContainer}>
-              {['offshore', 'cross-shore', 'onshore'].map((direction) => (
+              {['north', 'northeast', 'east', 'southeast', 'south', 'southwest', 'west', 'northwest'].map((direction) => (
                 <TouchableOpacity
                   key={direction}
                   style={[
@@ -198,7 +224,7 @@ const CheckInScreen: React.FC = () => {
                       conditions.windDirection === direction ? { color: COLORS.white } : {}
                     ]}
                   >
-                    {direction.replace('-', ' ')}
+                    {direction.charAt(0).toUpperCase()}
                   </Text>
                 </TouchableOpacity>
               ))}
@@ -315,11 +341,13 @@ const styles = StyleSheet.create({
   },
   windDirectionContainer: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 8,
+    justifyContent: 'flex-end',
   },
   windDirectionButton: {
     paddingVertical: 8,
-    paddingHorizontal: 12,
+    paddingHorizontal: 10,
     borderRadius: 8,
     backgroundColor: COLORS.white,
     borderWidth: 1,

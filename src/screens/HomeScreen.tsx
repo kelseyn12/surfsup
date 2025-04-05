@@ -29,7 +29,7 @@ const HomeScreen: React.FC = () => {
     >
       <View style={styles.header}>
         <Text style={styles.headerTitle}>SurfSUP</Text>
-        <Text style={styles.headerSubtitle}>Your Daily Surf Forecast</Text>
+        <Text style={styles.headerSubtitle}>Lake Superior Surf Forecast</Text>
       </View>
 
       <View style={styles.section}>
@@ -38,29 +38,29 @@ const HomeScreen: React.FC = () => {
           {/* This would be a FlatList in the actual implementation */}
           <TouchableOpacity 
             style={styles.spotCard}
-            onPress={() => navigation.navigate('SpotDetails', { spotId: '1', spot: { name: 'Pacifica' } })}
+            onPress={() => navigation.navigate('SpotDetails', { spotId: '1', spot: { name: 'Stoney Point' } })}
           >
-            <Text style={styles.spotName}>Pacifica</Text>
+            <Text style={styles.spotName}>Stoney Point</Text>
             <Text style={styles.spotCondition}>Good</Text>
-            <Text style={styles.spotDetails}>3-4ft • 12s • Light offshore</Text>
+            <Text style={styles.spotDetails}>3-4ft • 8s • Light offshore</Text>
           </TouchableOpacity>
 
           <TouchableOpacity 
             style={styles.spotCard}
-            onPress={() => navigation.navigate('SpotDetails', { spotId: '2', spot: { name: 'Ocean Beach' } })}
+            onPress={() => navigation.navigate('SpotDetails', { spotId: '2', spot: { name: 'Park Point' } })}
           >
-            <Text style={styles.spotName}>Ocean Beach</Text>
+            <Text style={styles.spotName}>Park Point</Text>
             <Text style={[styles.spotCondition, { color: COLORS.surfConditions.fair }]}>Fair</Text>
-            <Text style={styles.spotDetails}>4-5ft • 10s • Moderate onshore</Text>
+            <Text style={styles.spotDetails}>2-3ft • 6s • Moderate onshore</Text>
           </TouchableOpacity>
 
           <TouchableOpacity 
             style={styles.spotCard}
-            onPress={() => navigation.navigate('SpotDetails', { spotId: '3', spot: { name: 'Half Moon Bay' } })}
+            onPress={() => navigation.navigate('SpotDetails', { spotId: '3', spot: { name: 'Lester River' } })}
           >
-            <Text style={styles.spotName}>Half Moon Bay</Text>
+            <Text style={styles.spotName}>Lester River</Text>
             <Text style={[styles.spotCondition, { color: COLORS.surfConditions.excellent }]}>Excellent</Text>
-            <Text style={styles.spotDetails}>2-3ft • 15s • Glassy</Text>
+            <Text style={styles.spotDetails}>3-5ft • a10s • Glassy</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -71,9 +71,9 @@ const HomeScreen: React.FC = () => {
           style={styles.activityCard}
           onPress={() => navigation.navigate('SessionDetails', { sessionId: '123' })}
         >
-          <Text style={styles.activityTitle}>Ocean Beach Session</Text>
+          <Text style={styles.activityTitle}>Park Point Session</Text>
           <Text style={styles.activityDate}>Yesterday • 2hrs</Text>
-          <Text style={styles.activityDetails}>Fun morning session with clean conditions</Text>
+          <Text style={styles.activityDetails}>Epic NE wind swell, caught some great rides!</Text>
         </TouchableOpacity>
       </View>
 
@@ -88,12 +88,12 @@ const HomeScreen: React.FC = () => {
           <View style={styles.forecastDay}>
             <Text style={styles.forecastDate}>Tomorrow</Text>
             <Text style={[styles.forecastCondition, { color: COLORS.surfConditions.excellent }]}>Excellent</Text>
-            <Text style={styles.forecastDetails}>2-3ft</Text>
+            <Text style={styles.forecastDetails}>4-6ft</Text>
           </View>
           <View style={styles.forecastDay}>
             <Text style={styles.forecastDate}>Wed</Text>
             <Text style={[styles.forecastCondition, { color: COLORS.surfConditions.fair }]}>Fair</Text>
-            <Text style={styles.forecastDetails}>4-5ft</Text>
+            <Text style={styles.forecastDetails}>2-3ft</Text>
           </View>
         </View>
       </View>
