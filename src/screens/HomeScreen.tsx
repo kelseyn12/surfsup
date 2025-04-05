@@ -1,19 +1,53 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { MainTabScreenProps } from '../navigation/types';
 import { COLORS } from '../constants';
+import { SurfSpotCard } from '../components';
+import { SurfSpot } from '../types';
+import { fetchNearbySurfSpots } from '../services/api';
 
 const HomeScreen: React.FC = () => {
   const navigation = useNavigation<MainTabScreenProps<'Home'>['navigation']>();
-  const [refreshing, setRefreshing] = React.useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [nearbySpots, setNearbySpots] = useState<SurfSpot[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    loadNearbySpots();
+  }, []);
+
+  // Refresh spots when screen comes into focus
+  useFocusEffect(
+    React.useCallback(() => {
+      // Only reload if we already have spots loaded
+      if (nearbySpots.length > 0 && !refreshing) {
+        loadNearbySpots();
+      }
+      return () => {};
+    }, [nearbySpots.length, refreshing])
+  );
+
+  const loadNearbySpots = async () => {
+    try {
+      setLoading(true);
+      // Using a fixed location for Lake Superior near Duluth
+      const spots = await fetchNearbySurfSpots(46.7825, -92.0856);
+      if (spots) {
+        setNearbySpots(spots);
+      }
+    } catch (error) {
+      console.error('Error loading nearby spots:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const onRefresh = React.useCallback(() => {
     setRefreshing(true);
-    // In a real app, you would fetch fresh data here
-    setTimeout(() => {
+    loadNearbySpots().then(() => {
       setRefreshing(false);
-    }, 2000);
+    });
   }, []);
 
   return (
@@ -35,33 +69,18 @@ const HomeScreen: React.FC = () => {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Nearby Spots</Text>
         <View style={styles.spotsList}>
-          {/* This would be a FlatList in the actual implementation */}
-          <TouchableOpacity 
-            style={styles.spotCard}
-            onPress={() => navigation.navigate('SpotDetails', { spotId: '1', spot: { name: 'Stoney Point' } })}
-          >
-            <Text style={styles.spotName}>Stoney Point</Text>
-            <Text style={styles.spotCondition}>Good</Text>
-            <Text style={styles.spotDetails}>3-4ft • 8s • Light offshore</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity 
-            style={styles.spotCard}
-            onPress={() => navigation.navigate('SpotDetails', { spotId: '2', spot: { name: 'Park Point' } })}
-          >
-            <Text style={styles.spotName}>Park Point</Text>
-            <Text style={[styles.spotCondition, { color: COLORS.surfConditions.fair }]}>Fair</Text>
-            <Text style={styles.spotDetails}>2-3ft • 6s • Moderate onshore</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity 
-            style={styles.spotCard}
-            onPress={() => navigation.navigate('SpotDetails', { spotId: '3', spot: { name: 'Lester River' } })}
-          >
-            <Text style={styles.spotName}>Lester River</Text>
-            <Text style={[styles.spotCondition, { color: COLORS.surfConditions.excellent }]}>Excellent</Text>
-            <Text style={styles.spotDetails}>3-5ft • 10s • Glassy</Text>
-          </TouchableOpacity>
+          {nearbySpots.map(spot => (
+            <SurfSpotCard
+              key={spot.id}
+              spot={spot}
+              showConditions={true}
+              surferCount={spot.currentSurferCount || 0}
+            />
+          ))}
+          
+          {nearbySpots.length === 0 && !loading && (
+            <Text style={styles.noSpotsText}>No spots found nearby</Text>
+          )}
         </View>
       </View>
 
@@ -134,31 +153,11 @@ const styles = StyleSheet.create({
   spotsList: {
     gap: 12,
   },
-  spotCard: {
-    backgroundColor: COLORS.white,
-    borderRadius: 12,
-    padding: 16,
-    shadowColor: COLORS.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  spotName: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: COLORS.text.primary,
-  },
-  spotCondition: {
+  noSpotsText: {
     fontSize: 16,
-    fontWeight: '600',
-    color: COLORS.surfConditions.good,
-    marginTop: 4,
-  },
-  spotDetails: {
-    fontSize: 14,
-    color: COLORS.text.secondary,
-    marginTop: 4,
+    color: COLORS.gray,
+    textAlign: 'center',
+    marginVertical: 20,
   },
   activityCard: {
     backgroundColor: COLORS.white,

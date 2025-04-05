@@ -464,4 +464,33 @@ export const logSurfSession = async (sessionData: Omit<SurfSession, 'id' | 'crea
     console.error('Error logging surf session:', error);
     return null;
   }
+};
+
+/**
+ * Get active check-in for a user at a specific spot
+ * This is used to retrieve the current check-in state
+ */
+export const getActiveCheckInForUser = async (
+  userId: string, 
+  spotId: string
+): Promise<CheckIn | null> => {
+  try {
+    // Simulate API latency
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    // Check if this spot has active check-ins
+    if (!activeCheckIns[spotId]) {
+      return null;
+    }
+    
+    // Find active check-in for this user at this spot
+    const activeCheckIn = activeCheckIns[spotId].find(
+      checkin => checkin.userId === userId && checkin.isActive
+    );
+    
+    return activeCheckIn || null;
+  } catch (error) {
+    console.error('Error getting active check-in:', error);
+    return null;
+  }
 }; 

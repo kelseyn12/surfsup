@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   StyleSheet, 
   View, 
@@ -8,11 +8,13 @@ import {
   RefreshControl,
   Alert
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { MainTabScreenProps } from '../navigation/types';
 import { COLORS } from '../constants';
 import { SurfSpot } from '../types';
+import { SurfSpotCard } from '../components';
+import { getSurferCount } from '../services/api';
 
 const FavoritesScreen: React.FC = () => {
   const navigation = useNavigation<MainTabScreenProps<'Favorites'>['navigation']>();
@@ -21,37 +23,91 @@ const FavoritesScreen: React.FC = () => {
   // Mock data for favorite spots
   const [favoriteSpots, setFavoriteSpots] = useState<SurfSpot[]>([
     {
-      id: '1',
+      id: 'stonypoint',
       name: 'Stoney Point',
-      location: { latitude: 46.9463, longitude: -91.8944 },
-      type: 'point-break',
+      location: { 
+        latitude: 46.9463, 
+        longitude: -91.8944,
+        city: 'Duluth',
+        state: 'MN',
+        country: 'USA' 
+      },
+      type: ['point-break'],
       difficulty: 'intermediate',
-      isFavorite: true,
+      description: 'Popular spot for Lake Superior surfers with consistent waves during NE winds.',
+      imageUrls: ['https://example.com/stonypoint.jpg'],
+      createdAt: '2023-01-15T00:00:00.000Z',
+      updatedAt: '2023-01-15T00:00:00.000Z',
     },
     {
-      id: '2',
+      id: 'parkpoint',
       name: 'Park Point',
-      location: { latitude: 46.7616, longitude: -92.0593 },
-      type: 'beach-break',
+      location: { 
+        latitude: 46.7616, 
+        longitude: -92.0593,
+        city: 'Duluth',
+        state: 'MN',
+        country: 'USA'
+      },
+      type: ['beach-break'],
       difficulty: 'beginner',
-      isFavorite: true,
+      description: 'Long sandy beach with gentle waves, perfect for beginners during calm conditions.',
+      imageUrls: ['https://example.com/parkpoint.jpg'],
+      createdAt: '2023-01-15T00:00:00.000Z',
+      updatedAt: '2023-01-15T00:00:00.000Z',
     },
     {
-      id: '3',
+      id: 'lesterriver',
       name: 'Lester River',
-      location: { latitude: 46.8330, longitude: -92.0070 },
-      type: 'river-mouth',
+      location: { 
+        latitude: 46.8330, 
+        longitude: -92.0070,
+        city: 'Duluth',
+        state: 'MN',
+        country: 'USA'
+      },
+      type: ['river-mouth'],
       difficulty: 'advanced',
-      isFavorite: true,
+      description: 'River mouth break that works well during strong winds and storms.',
+      imageUrls: ['https://example.com/lesterriver.jpg'],
+      createdAt: '2023-01-15T00:00:00.000Z',
+      updatedAt: '2023-01-15T00:00:00.000Z',
     },
   ]);
+  
+  const [surferCounts, setSurferCounts] = useState<Record<string, number>>({});
+
+  useEffect(() => {
+    // Load initial surfer counts
+    loadSurferCounts();
+  }, []);
+
+  // Refresh surfer counts when screen comes into focus
+  useFocusEffect(
+    React.useCallback(() => {
+      // Only reload if we have favorite spots and we're not already refreshing
+      if (favoriteSpots.length > 0 && !refreshing) {
+        loadSurferCounts();
+      }
+      return () => {};
+    }, [favoriteSpots.length, refreshing])
+  );
+
+  const loadSurferCounts = async () => {
+    const counts: Record<string, number> = {};
+    
+    for (const spot of favoriteSpots) {
+      counts[spot.id] = await getSurferCount(spot.id);
+    }
+    
+    setSurferCounts(counts);
+  };
 
   const onRefresh = () => {
     setRefreshing(true);
-    // In a real app, you'd fetch fresh data here
-    setTimeout(() => {
+    loadSurferCounts().then(() => {
       setRefreshing(false);
-    }, 1000);
+    });
   };
 
   const handleRemoveFavorite = (spotId: string) => {
@@ -75,21 +131,13 @@ const FavoritesScreen: React.FC = () => {
   };
 
   const renderSpotItem = ({ item }: { item: SurfSpot }) => (
-    <TouchableOpacity
-      style={styles.spotCard}
-      onPress={() => navigation.navigate('SpotDetails', { spotId: item.id, spot: item })}
-    >
-      <View style={styles.spotInfo}>
-        <Text style={styles.spotName}>{item.name}</Text>
-        <Text style={styles.spotType}>{item.type.replace('-', ' ')} • {item.difficulty}</Text>
-      </View>
-      <TouchableOpacity
-        style={styles.favoriteButton}
-        onPress={() => handleRemoveFavorite(item.id)}
-      >
-        <Ionicons name="heart" size={24} color={COLORS.error} />
-      </TouchableOpacity>
-    </TouchableOpacity>
+    <SurfSpotCard
+      spot={item}
+      showConditions={true}
+      surferCount={surferCounts[item.id] || 0}
+      isFavorite={true}
+      onToggleFavorite={() => handleRemoveFavorite(item.id)}
+    />
   );
 
   return (

@@ -14,7 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { RootStackScreenProps } from '../navigation/types';
 import { COLORS } from '../constants';
 import { SurfConditions } from '../types';
-import { fetchSurfConditions, fetchSurfForecast, checkInToSpot, checkOutFromSpot, getSurferCount } from '../services/api';
+import { fetchSurfConditions, fetchSurfForecast, checkInToSpot, checkOutFromSpot, getSurferCount, getActiveCheckInForUser } from '../services/api';
 
 const SpotDetailsScreen: React.FC = () => {
   const route = useRoute<RootStackScreenProps<'SpotDetails'>['route']>();
@@ -33,6 +33,7 @@ const SpotDetailsScreen: React.FC = () => {
   // Load data on component mount
   useEffect(() => {
     loadData();
+    checkExistingCheckIn();
   }, [spotId]);
 
   const loadData = async () => {
@@ -55,6 +56,25 @@ const SpotDetailsScreen: React.FC = () => {
       Alert.alert('Error', 'Failed to load spot information. Please try again later.');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // Check if the user is already checked in at this spot
+  const checkExistingCheckIn = async () => {
+    try {
+      // In a real app, you would get the actual userId from auth state
+      const userId = 'test-user-id';
+      const activeCheckIn = await getActiveCheckInForUser(userId, spotId);
+      
+      if (activeCheckIn) {
+        setIsCheckedIn(true);
+        setCheckInId(activeCheckIn.id);
+      } else {
+        setIsCheckedIn(false);
+        setCheckInId(null);
+      }
+    } catch (error) {
+      console.error('Error checking existing check-in:', error);
     }
   };
 
