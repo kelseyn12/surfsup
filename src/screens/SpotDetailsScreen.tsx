@@ -14,7 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { RootStackScreenProps } from '../navigation/types';
 import { COLORS } from '../constants';
 import { SurfConditions } from '../types';
-import { fetchSurfConditions, fetchSurfForecast, checkInToSpot, checkOutFromSpot, getSurferCount, getActiveCheckInForUser } from '../services/api';
+import { fetchSurfConditions, fetchSurfForecast, checkInToSpot, checkOutFromSpot, getSurferCount, getActiveCheckInForUser, getActiveCheckInForUserAnywhere } from '../services/api';
 
 const SpotDetailsScreen: React.FC = () => {
   const route = useRoute<RootStackScreenProps<'SpotDetails'>['route']>();
@@ -64,12 +64,16 @@ const SpotDetailsScreen: React.FC = () => {
     try {
       // In a real app, you would get the actual userId from auth state
       const userId = 'test-user-id';
+      
+      // Only check for check-ins at THIS spot
       const activeCheckIn = await getActiveCheckInForUser(userId, spotId);
       
       if (activeCheckIn) {
+        // User is checked in at this spot
         setIsCheckedIn(true);
         setCheckInId(activeCheckIn.id);
       } else {
+        // User is not checked in at this spot
         setIsCheckedIn(false);
         setCheckInId(null);
       }
@@ -117,6 +121,72 @@ const SpotDetailsScreen: React.FC = () => {
       try {
         // In a real app, you would get the actual userId from auth state
         const userId = 'test-user-id';
+
+        // Check if user is already checked in somewhere else
+        const existingCheckIn = await getActiveCheckInForUserAnywhere(userId);
+        
+        if (existingCheckIn && existingCheckIn.spotId !== spotId) {
+          // User is already checked in elsewhere
+          setIsLoading(false);
+          
+          // Get the spot name
+          let otherSpotName = 'another spot';
+          try {
+            const spots = await fetchNearbySurfSpots(46.7825, -92.0856);
+            const otherSpot = spots?.find(s => s.id === existingCheckIn.spotId);
+            if (otherSpot) {
+              otherSpotName = otherSpot.name;
+            }
+          } catch (error) {
+            console.error('Error fetching spot details:', error);
+          }
+          
+          // Ask if they want to check out from the other spot
+          Alert.alert(
+            'Already Checked In',
+            `You are currently checked in at ${otherSpotName}. Do you want to check out from there and check in here?`,
+            [
+              {
+                text: 'No',
+                style: 'cancel'
+              },
+              {
+                text: 'Yes',
+                onPress: async () => {
+                  setIsLoading(true);
+                  try {
+                    // Check out from the other spot
+                    const checkOutSuccess = await checkOutFromSpot(existingCheckIn.id);
+                    if (checkOutSuccess) {
+                      // Now check in to this spot
+                      const checkIn = await checkInToSpot(userId, spotId);
+                      if (checkIn) {
+                        setIsCheckedIn(true);
+                        setCheckInId(checkIn.id);
+                        const newCount = await getSurferCount(spotId);
+                        setSurferCount(newCount);
+                        loadData();
+                        Alert.alert('Success', 'You have checked in to this spot!');
+                      } else {
+                        Alert.alert('Error', 'Failed to check in. Please try again.');
+                      }
+                    } else {
+                      Alert.alert('Error', 'Failed to check out from previous spot. Please try again.');
+                    }
+                  } catch (error) {
+                    console.error('Error handling check-in/check-out flow:', error);
+                    Alert.alert('Error', 'Failed to process check-in. Please try again.');
+                  } finally {
+                    setIsLoading(false);
+                  }
+                }
+              }
+            ]
+          );
+          return;
+        }
+        
+        // Regular check in (not already checked in elsewhere)
         const checkIn = await checkInToSpot(userId, spotId);
         
         if (checkIn) {
