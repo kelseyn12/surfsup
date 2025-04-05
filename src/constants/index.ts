@@ -2,22 +2,32 @@
  * Application constants
  */
 
-// Theme colors
+// Colors used throughout the app
 export const COLORS = {
-  primary: '#0277BD', // Ocean blue
-  secondary: '#4FC3F7', // Light blue
-  tertiary: '#00796B', // Teal
-  background: '#F5F5F5',
-  surfGood: '#4CAF50', // Green for good conditions
-  surfFair: '#FFC107', // Amber for fair conditions
-  surfPoor: '#F44336', // Red for poor conditions
-  white: '#FFFFFF',
+  primary: '#0077B6', // Ocean Blue
+  secondary: '#00B4D8', // Light Blue
+  tertiary: '#90E0EF', // Sky Blue
+  background: '#F8F9FA', // Light Gray
+  white: '#FFFFFF', 
   black: '#000000',
-  gray: '#9E9E9E',
-  lightGray: '#E0E0E0',
-  darkGray: '#616161',
+  gray: '#6C757D',
+  lightGray: '#CED4DA',
+  error: '#DC3545', // Red
+  success: '#28A745', // Green
+  warning: '#FFC107', // Yellow
+  info: '#17A2B8', // Teal
+  text: {
+    primary: '#212529', // Dark Gray
+    secondary: '#6C757D', // Medium Gray
+    light: '#F8F9FA', // Light Gray
+  },
+  surfConditions: {
+    poor: '#DC3545', // Red
+    fair: '#FFC107', // Yellow
+    good: '#28A745', // Green
+    excellent: '#17A2B8', // Teal
+  },
   transparent: 'transparent',
-  overlay: 'rgba(0, 0, 0, 0.5)',
 };
 
 // Font sizes
@@ -54,18 +64,86 @@ export const BORDER_RADIUS = {
   circle: 9999,
 };
 
-// API endpoints and keys
+// Route names for navigation
+export const ROUTES = {
+  // Auth related routes
+  AUTH: 'Auth',
+  SIGN_IN: 'SignIn',
+  SIGN_UP: 'SignUp',
+  FORGOT_PASSWORD: 'ForgotPassword',
+  
+  // Main tabs
+  MAIN: 'Main',
+  HOME: 'Home',
+  MAP: 'Map',
+  FAVORITES: 'Favorites',
+  PROFILE: 'Profile',
+  
+  // Content screens
+  SPOT_DETAILS: 'SpotDetails',
+  CHECK_IN: 'CheckIn',
+  SESSION_LOG: 'SessionLog',
+  SESSION_DETAILS: 'SessionDetails',
+  SETTINGS: 'Settings',
+  ON_BOARDING: 'OnBoarding',
+};
+
+// API endpoints
 export const API = {
-  // These would be configured via environment variables
-  WINDY_API_KEY: process.env.WINDY_API_KEY || '',
-  WINDY_API_URL: 'https://api.windy.com',
-  
-  NOAA_API_URL: 'https://api.tidesandcurrents.noaa.gov/api/prod/datagetter',
-  
-  NDBC_BUOY_URL: 'https://www.ndbc.noaa.gov/data/realtime2',
-  
-  // Base URL for our backend API (if applicable)
-  BASE_URL: process.env.API_BASE_URL || 'https://api.surfsup.com',
+  WINDY: 'https://api.windy.com',
+  NOAA: 'https://api.weather.gov',
+  NDBC: 'https://www.ndbc.noaa.gov/data/realtime2',
+};
+
+// Storage keys for AsyncStorage
+export const STORAGE_KEYS = {
+  USER_PROFILE: 'user_profile',
+  AUTH_TOKEN: 'auth_token',
+  FAVORITE_SPOTS: 'favorite_spots',
+  RECENT_SPOTS: 'recent_spots',
+  USER_SESSIONS: 'user_sessions',
+  USER_SETTINGS: 'user_settings',
+  ONBOARDING_COMPLETE: 'onboarding_complete',
+};
+
+// Message constants
+export const MESSAGES = {
+  ERRORS: {
+    GENERAL: 'Something went wrong. Please try again.',
+    NETWORK: 'Network error. Please check your connection.',
+    AUTH: 'Authentication failed. Please login again.',
+    LOCATION_PERMISSION: 'Location permissions are required to use this feature.',
+    LOCATION_UNAVAILABLE: 'Could not determine your location.',
+  },
+  SUCCESS: {
+    CHECK_IN: 'Successfully checked in!',
+    SESSION_LOGGED: 'Session logged successfully!',
+    SPOT_ADDED: 'Spot added to favorites!',
+    SPOT_REMOVED: 'Spot removed from favorites!',
+  },
+};
+
+// Timeouts in milliseconds
+export const TIMEOUTS = {
+  LOCATION: 10000, // 10 seconds
+  API_CALL: 15000, // 15 seconds
+  REFRESH_INTERVAL: 900000, // 15 minutes
+};
+
+// Define surf condition thresholds
+export const CONDITION_THRESHOLDS = {
+  WAVE_HEIGHT: {
+    POOR: 0.5, // Less than 0.5m is poor
+    FAIR: 1.0, // 0.5-1.0m is fair
+    GOOD: 2.0, // 1.0-2.0m is good
+    // Above 2.0m is excellent
+  },
+  WIND_SPEED: {
+    LIGHT: 5, // Less than 5 knots
+    MODERATE: 15, // 5-15 knots
+    STRONG: 25, // 15-25 knots
+    // Above 25 knots is very strong
+  },
 };
 
 // App configuration
@@ -122,26 +200,4 @@ export const TIDE = {
   LOW: { label: 'Low Tide', color: COLORS.surfFair },
   RISING: { label: 'Rising Tide', color: COLORS.surfGood },
   FALLING: { label: 'Falling Tide', color: COLORS.surfGood },
-};
-
-// Navigation routes
-export const ROUTES = {
-  HOME: 'Home',
-  SPOT_DETAILS: 'SpotDetails',
-  SPOT_MAP: 'SpotMap',
-  FAVORITES: 'Favorites',
-  SEARCH: 'Search',
-  PROFILE: 'Profile',
-  SETTINGS: 'Settings',
-  CHECK_IN: 'CheckIn',
-  SESSION_LOG: 'SessionLog',
-  SESSION_HISTORY: 'SessionHistory',
-  SURF_REPORT: 'SurfReport',
-  NOTIFICATIONS: 'Notifications',
-  ONBOARDING: 'Onboarding',
-  AUTH: 'Auth',
-  LOGIN: 'Login',
-  REGISTER: 'Register',
-  FORGOT_PASSWORD: 'ForgotPassword',
-  ABOUT: 'About',
 }; 
