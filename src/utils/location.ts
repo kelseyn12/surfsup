@@ -1,14 +1,29 @@
 /**
  * Location utilities for calculating distances and finding nearby spots
  */
-import type { SurfSpot } from '../types';
+import { SurfSpot, CoordinateRegion } from '../types';
+import { APP_CONFIG } from '../constants';
 
 /**
- * Calculate distance between two coordinates using the Haversine formula
- * @param lat1 Latitude of first point
- * @param lon1 Longitude of first point
- * @param lat2 Latitude of second point
- * @param lon2 Longitude of second point
+ * Location utilities for the SurfSUP app
+ */
+
+// Earth radius in kilometers
+const EARTH_RADIUS_KM = 6371;
+
+/**
+ * Converts degrees to radians
+ */
+export const degreesToRadians = (degrees: number): number => {
+  return degrees * (Math.PI / 180);
+};
+
+/**
+ * Calculates the distance between two coordinates using the Haversine formula
+ * @param lat1 Latitude of the first point
+ * @param lon1 Longitude of the first point
+ * @param lat2 Latitude of the second point
+ * @param lon2 Longitude of the second point
  * @returns Distance in kilometers
  */
 export const calculateDistance = (
@@ -17,60 +32,139 @@ export const calculateDistance = (
   lat2: number,
   lon2: number
 ): number => {
-  const R = 6371; // Radius of the Earth in km
   const dLat = degreesToRadians(lat2 - lat1);
   const dLon = degreesToRadians(lon2 - lon1);
   
   const a =
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(degreesToRadians(lat1)) * Math.cos(degreesToRadians(lat2)) *
-    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    Math.cos(degreesToRadians(lat1)) *
+    Math.cos(degreesToRadians(lat2)) *
+    Math.sin(dLon / 2) *
+    Math.sin(dLon / 2);
   
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  const distance = R * c; // Distance in km
-  
-  return distance;
+  return EARTH_RADIUS_KM * c;
 };
 
 /**
- * Convert degrees to radians
- * @param degrees Angle in degrees
- * @returns Angle in radians
+ * Filters spots within a certain radius of the user's location
+ * @param spots Array of surf spots to filter
+ * @param userLat User's latitude
+ * @param userLon User's longitude
+ * @param radiusKm Radius in kilometers (default from APP_CONFIG)
+ * @returns Array of spots within the radius, sorted by distance
  */
-export const degreesToRadians = (degrees: number): number => {
-  return degrees * (Math.PI / 180);
-};
-
-/**
- * Find surf spots within a certain radius of a location
- * @param spots Array of surf spots
- * @param latitude Current latitude
- * @param longitude Current longitude
- * @param radius Radius in kilometers
- * @returns Array of nearby surf spots with distance
- */
-export const findNearbySpots = (
+export const getNearbySpots = (
   spots: SurfSpot[],
+  userLat: number,
+  userLon: number,
+  radiusKm = APP_CONFIG.NEARBY_SPOT_RADIUS
+): SurfSpot[] => {
+  // Calculate distance for each spot
+  const spotsWithDistance = spots.map(spot => {
+    const distance = calculateDistance(
+      userLat,
+      userLon,
+      spot.location.latitude,
+      spot.location.longitude
+    );
+    return { spot, distance };
+  });
+  
+  // Filter spots within radius and sort by distance
+  return spotsWithDistance
+    .filter(item => item.distance <= radiusKm)
+    .sort((a, b) => a.distance - b.distance)
+    .map(item => item.spot);
+};
+
+/**
+ * Creates a map region centered on a specific location with default deltas
+ * @param latitude Center latitude
+ * @param longitude Center longitude
+ * @param latitudeDelta Optional latitude delta (zoom level)
+ * @param longitudeDelta Optional longitude delta (zoom level)
+ * @returns CoordinateRegion object for React Native Maps
+ */
+export const createMapRegion = (
   latitude: number,
   longitude: number,
-  radius: number
-): Array<SurfSpot & { distance: number }> => {
-  return spots
-    .map(spot => {
-      const distance = calculateDistance(
-        latitude,
-        longitude,
-        spot.location.latitude,
-        spot.location.longitude
-      );
-      
-      return {
-        ...spot,
-        distance,
-      };
-    })
-    .filter(spot => spot.distance <= radius)
-    .sort((a, b) => a.distance - b.distance);
+  latitudeDelta = 0.1,
+  longitudeDelta = 0.1
+): CoordinateRegion => {
+  return {
+    latitude,
+    longitude,
+    latitudeDelta,
+    longitudeDelta,
+  };
+};
+
+/**
+ * Creates a map region that encompasses all provided spots
+ * @param spots Array of surf spots to include in the region
+ * @param padding Percentage of padding to add around the spots (0-1)
+ * @returns CoordinateRegion object for React Native Maps
+ */
+export const createRegionForSpots = (
+  spots: SurfSpot[],
+  padding = 0.2
+): CoordinateRegion | null => {
+  if (!spots.length) {
+    return null;
+  }
+  
+  // If only one spot, create a centered region
+  if (spots.length === 1) {
+    return createMapRegion(
+      spots[0].location.latitude,
+      spots[0].location.longitude
+    );
+  }
+  
+  // Find min and max coordinates
+  let minLat = spots[0].location.latitude;
+  let maxLat = spots[0].location.latitude;
+  let minLon = spots[0].location.longitude;
+  let maxLon = spots[0].location.longitude;
+  
+  spots.forEach(spot => {
+    minLat = Math.min(minLat, spot.location.latitude);
+    maxLat = Math.max(maxLat, spot.location.latitude);
+    minLon = Math.min(minLon, spot.location.longitude);
+    maxLon = Math.max(maxLon, spot.location.longitude);
+  });
+  
+  // Calculate center
+  const centerLat = (minLat + maxLat) / 2;
+  const centerLon = (minLon + maxLon) / 2;
+  
+  // Calculate deltas with padding
+  const latDelta = (maxLat - minLat) * (1 + padding);
+  const lonDelta = (maxLon - minLon) * (1 + padding);
+  
+  return {
+    latitude: centerLat,
+    longitude: centerLon,
+    latitudeDelta: Math.max(latDelta, 0.02), // Ensure a minimum zoom level
+    longitudeDelta: Math.max(lonDelta, 0.02),
+  };
+};
+
+/**
+ * Formats a coordinate to a readable string
+ * @param latitude Latitude coordinate
+ * @param longitude Longitude coordinate
+ * @returns Formatted string (e.g., "46.7825° N, 92.0856° W")
+ */
+export const formatCoordinates = (latitude: number, longitude: number): string => {
+  const latDir = latitude >= 0 ? 'N' : 'S';
+  const lonDir = longitude >= 0 ? 'E' : 'W';
+  
+  const absLat = Math.abs(latitude).toFixed(4);
+  const absLon = Math.abs(longitude).toFixed(4);
+  
+  return `${absLat}° ${latDir}, ${absLon}° ${lonDir}`;
 };
 
 /**

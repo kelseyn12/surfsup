@@ -185,4 +185,208 @@ export const formatDuration = (minutes: number): string => {
       return `${hours} ${hours === 1 ? 'hour' : 'hours'} ${mins} ${mins === 1 ? 'minute' : 'minutes'}`;
     }
   }
+};
+
+import { SurfConditions } from '../types';
+
+/**
+ * Formats a date to a readable string
+ * @param date Date to format
+ * @param options DateTimeFormatOptions
+ * @returns Formatted date string
+ */
+export const formatDate = (
+  date: Date | string,
+  options: Intl.DateTimeFormatOptions = { 
+    weekday: 'short', 
+    month: 'short', 
+    day: 'numeric'
+  }
+): string => {
+  const dateObj = typeof date === 'string' ? new Date(date) : date;
+  return new Intl.DateTimeFormat('en-US', options).format(dateObj);
+};
+
+/**
+ * Formats a time to a readable string
+ * @param date Date to format
+ * @param includeSeconds Whether to include seconds
+ * @returns Formatted time string
+ */
+export const formatTime = (
+  date: Date | string,
+  includeSeconds = false
+): string => {
+  const dateObj = typeof date === 'string' ? new Date(date) : date;
+  return new Intl.DateTimeFormat('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    second: includeSeconds ? '2-digit' : undefined,
+    hour12: true,
+  }).format(dateObj);
+};
+
+/**
+ * Formats a date and time to a readable string
+ * @param date Date to format
+ * @param includeSeconds Whether to include seconds
+ * @returns Formatted date and time string
+ */
+export const formatDateTime = (
+  date: Date | string,
+  includeSeconds = false
+): string => {
+  const dateObj = typeof date === 'string' ? new Date(date) : date;
+  return `${formatDate(dateObj)} at ${formatTime(dateObj, includeSeconds)}`;
+};
+
+/**
+ * Formats a relative time (e.g., "2 hours ago")
+ * @param date Date to format
+ * @returns Formatted relative time string
+ */
+export const formatRelativeTime = (date: Date | string): string => {
+  const dateObj = typeof date === 'string' ? new Date(date) : date;
+  const now = new Date();
+  const diffMs = now.getTime() - dateObj.getTime();
+  
+  // Convert to seconds
+  const diffSec = Math.floor(diffMs / 1000);
+  
+  if (diffSec < 60) {
+    return diffSec <= 1 ? 'just now' : `${diffSec} seconds ago`;
+  }
+  
+  // Convert to minutes
+  const diffMin = Math.floor(diffSec / 60);
+  
+  if (diffMin < 60) {
+    return diffMin === 1 ? '1 minute ago' : `${diffMin} minutes ago`;
+  }
+  
+  // Convert to hours
+  const diffHours = Math.floor(diffMin / 60);
+  
+  if (diffHours < 24) {
+    return diffHours === 1 ? '1 hour ago' : `${diffHours} hours ago`;
+  }
+  
+  // Convert to days
+  const diffDays = Math.floor(diffHours / 24);
+  
+  if (diffDays < 7) {
+    return diffDays === 1 ? 'yesterday' : `${diffDays} days ago`;
+  }
+  
+  // If more than a week, return the actual date
+  return formatDate(dateObj);
+};
+
+/**
+ * Formats temperature with unit
+ * @param temp Temperature value
+ * @param unit Temperature unit (C or F)
+ * @returns Formatted temperature string
+ */
+export const formatTemperature = (temp: number, unit: 'C' | 'F' = 'F'): string => {
+  const roundedTemp = Math.round(temp);
+  return `${roundedTemp}°${unit}`;
+};
+
+/**
+ * Formats wave height with unit
+ * @param min Minimum wave height
+ * @param max Maximum wave height (optional)
+ * @param unit Wave height unit (ft or m)
+ * @returns Formatted wave height string
+ */
+export const formatWaveHeight = (
+  min: number,
+  max?: number,
+  unit: 'ft' | 'm' = 'ft'
+): string => {
+  const roundedMin = Math.round(min * 10) / 10;
+  
+  if (max === undefined || min === max) {
+    return `${roundedMin} ${unit}`;
+  }
+  
+  const roundedMax = Math.round(max * 10) / 10;
+  return `${roundedMin}-${roundedMax} ${unit}`;
+};
+
+/**
+ * Formats wind information
+ * @param speed Wind speed
+ * @param direction Wind direction
+ * @param unit Wind speed unit (mph, kts, kph)
+ * @returns Formatted wind string
+ */
+export const formatWind = (
+  speed: number,
+  direction: string,
+  unit: 'mph' | 'kts' | 'kph' = 'mph'
+): string => {
+  const roundedSpeed = Math.round(speed);
+  return `${direction} ${roundedSpeed} ${unit}`;
+};
+
+/**
+ * Formats rating as stars
+ * @param rating Rating value (1-10)
+ * @param maxRating Maximum possible rating
+ * @returns String of stars representing the rating
+ */
+export const formatRatingStars = (
+  rating: number,
+  maxRating: number = 5
+): string => {
+  const normalizedRating = Math.round((rating / 10) * maxRating);
+  return '★'.repeat(normalizedRating) + '☆'.repeat(maxRating - normalizedRating);
+};
+
+/**
+ * Formats a duration in minutes to hours and minutes
+ * @param durationMinutes Duration in minutes
+ * @returns Formatted duration string
+ */
+export const formatDuration = (durationMinutes: number): string => {
+  if (!durationMinutes) return '0 min';
+  
+  const hours = Math.floor(durationMinutes / 60);
+  const minutes = durationMinutes % 60;
+  
+  if (hours === 0) {
+    return `${minutes} min`;
+  }
+  
+  if (minutes === 0) {
+    return `${hours} hr`;
+  }
+  
+  return `${hours} hr ${minutes} min`;
+};
+
+/**
+ * Returns a description of surf conditions
+ * @param conditions SurfConditions object
+ * @returns A human-readable description of the conditions
+ */
+export const describeSurfConditions = (conditions: SurfConditions): string => {
+  const waveDescription = formatWaveHeight(
+    conditions.waveHeight.min,
+    conditions.waveHeight.max,
+    conditions.waveHeight.unit
+  );
+  
+  const windDescription = formatWind(
+    conditions.wind.speed,
+    conditions.wind.direction,
+    conditions.wind.unit
+  );
+  
+  return `${waveDescription} waves with ${windDescription} winds. ${formatTemperature(
+    conditions.weather.temperature,
+    conditions.weather.unit
+  )} and ${conditions.weather.condition}.`;
 }; 
