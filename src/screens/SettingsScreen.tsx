@@ -1,12 +1,11 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { 
   StyleSheet, 
   View, 
   Text, 
+  ScrollView, 
   TouchableOpacity, 
-  Switch, 
-  ScrollView,
-  Alert
+  Switch 
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -17,85 +16,37 @@ const SettingsScreen: React.FC = () => {
   const navigation = useNavigation<RootStackScreenProps<'Settings'>['navigation']>();
   
   // Mock settings state
-  const [settings, setSettings] = useState({
-    notifications: true,
-    darkMode: false,
-    units: 'imperial', // imperial or metric
-    homeSpot: 'Ocean Beach',
-    saveSessionData: true,
-  });
-
-  const toggleSetting = (setting: keyof typeof settings, value?: any) => {
-    if (value !== undefined) {
-      setSettings({
-        ...settings,
-        [setting]: value
-      });
-    } else {
-      setSettings({
-        ...settings,
-        [setting]: !settings[setting]
-      });
-    }
-  };
-
-  const handleLogout = () => {
-    Alert.alert(
-      'Logout',
-      'Are you sure you want to logout?',
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-        {
-          text: 'Logout',
-          onPress: () => navigation.navigate('Auth'),
-          style: 'destructive',
-        },
-      ]
-    );
-  };
+  const [notificationsEnabled, setNotificationsEnabled] = React.useState(true);
+  const [locationEnabled, setLocationEnabled] = React.useState(true);
+  const [darkModeEnabled, setDarkModeEnabled] = React.useState(false);
+  const [privacyMode, setPrivacyMode] = React.useState('friends'); // 'public', 'friends', 'private'
 
   return (
     <ScrollView style={styles.container}>
+      <View style={styles.header}>
+        <TouchableOpacity 
+          onPress={() => {
+            console.log('Back button pressed in Settings');
+            navigation.goBack();
+          }} 
+          style={styles.backButton}
+        >
+          <Ionicons name="arrow-back" size={28} color={COLORS.primary} />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Settings</Text>
+      </View>
+
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Preferences</Text>
+        <Text style={styles.sectionTitle}>Notifications</Text>
         
         <View style={styles.settingRow}>
           <View style={styles.settingInfo}>
-            <Text style={styles.settingLabel}>Notifications</Text>
-            <Text style={styles.settingDescription}>Receive alerts about surf conditions</Text>
+            <Text style={styles.settingLabel}>Enable Notifications</Text>
+            <Text style={styles.settingDescription}>Receive alerts about wave conditions and friends' check-ins</Text>
           </View>
           <Switch
-            value={settings.notifications}
-            onValueChange={() => toggleSetting('notifications')}
-            trackColor={{ false: COLORS.lightGray, true: COLORS.primary }}
-            thumbColor={COLORS.white}
-          />
-        </View>
-        
-        <View style={styles.settingRow}>
-          <View style={styles.settingInfo}>
-            <Text style={styles.settingLabel}>Dark Mode</Text>
-            <Text style={styles.settingDescription}>Use dark theme throughout the app</Text>
-          </View>
-          <Switch
-            value={settings.darkMode}
-            onValueChange={() => toggleSetting('darkMode')}
-            trackColor={{ false: COLORS.lightGray, true: COLORS.primary }}
-            thumbColor={COLORS.white}
-          />
-        </View>
-        
-        <View style={styles.settingRow}>
-          <View style={styles.settingInfo}>
-            <Text style={styles.settingLabel}>Save Session Data</Text>
-            <Text style={styles.settingDescription}>Store your surfing sessions history</Text>
-          </View>
-          <Switch
-            value={settings.saveSessionData}
-            onValueChange={() => toggleSetting('saveSessionData')}
+            value={notificationsEnabled}
+            onValueChange={setNotificationsEnabled}
             trackColor={{ false: COLORS.lightGray, true: COLORS.primary }}
             thumbColor={COLORS.white}
           />
@@ -103,110 +54,114 @@ const SettingsScreen: React.FC = () => {
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Units</Text>
+        <Text style={styles.sectionTitle}>Location</Text>
         
-        <View style={styles.unitSelector}>
-          <TouchableOpacity
-            style={[
-              styles.unitButton,
-              settings.units === 'imperial' ? styles.activeUnitButton : {}
-            ]}
-            onPress={() => toggleSetting('units', 'imperial')}
-          >
-            <Text
-              style={[
-                styles.unitButtonText,
-                settings.units === 'imperial' ? styles.activeUnitButtonText : {}
-              ]}
-            >
-              Imperial (ft, F)
-            </Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity
-            style={[
-              styles.unitButton,
-              settings.units === 'metric' ? styles.activeUnitButton : {}
-            ]}
-            onPress={() => toggleSetting('units', 'metric')}
-          >
-            <Text
-              style={[
-                styles.unitButtonText,
-                settings.units === 'metric' ? styles.activeUnitButtonText : {}
-              ]}
-            >
-              Metric (m, C)
-            </Text>
-          </TouchableOpacity>
+        <View style={styles.settingRow}>
+          <View style={styles.settingInfo}>
+            <Text style={styles.settingLabel}>Location Services</Text>
+            <Text style={styles.settingDescription}>Allow the app to use your location for nearby spots</Text>
+          </View>
+          <Switch
+            value={locationEnabled}
+            onValueChange={setLocationEnabled}
+            trackColor={{ false: COLORS.lightGray, true: COLORS.primary }}
+            thumbColor={COLORS.white}
+          />
         </View>
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Appearance</Text>
+        
+        <View style={styles.settingRow}>
+          <View style={styles.settingInfo}>
+            <Text style={styles.settingLabel}>Dark Mode</Text>
+            <Text style={styles.settingDescription}>Switch between light and dark themes</Text>
+          </View>
+          <Switch
+            value={darkModeEnabled}
+            onValueChange={setDarkModeEnabled}
+            trackColor={{ false: COLORS.lightGray, true: COLORS.primary }}
+            thumbColor={COLORS.white}
+          />
+        </View>
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Privacy</Text>
+        
+        <TouchableOpacity style={styles.privacyOption}>
+          <View style={styles.privacyOptionContent}>
+            <Ionicons 
+              name="people" 
+              size={24} 
+              color={privacyMode === 'friends' ? COLORS.primary : COLORS.gray} 
+            />
+            <View style={styles.privacyOptionTexts}>
+              <Text style={styles.privacyOptionTitle}>Friends Only</Text>
+              <Text style={styles.privacyOptionDescription}>Only your friends can see your activity</Text>
+            </View>
+          </View>
+          {privacyMode === 'friends' && (
+            <Ionicons name="checkmark-circle" size={24} color={COLORS.primary} />
+          )}
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.privacyOption}>
+          <View style={styles.privacyOptionContent}>
+            <Ionicons 
+              name="globe" 
+              size={24} 
+              color={privacyMode === 'public' ? COLORS.primary : COLORS.gray} 
+            />
+            <View style={styles.privacyOptionTexts}>
+              <Text style={styles.privacyOptionTitle}>Public</Text>
+              <Text style={styles.privacyOptionDescription}>Everyone can see your activity</Text>
+            </View>
+          </View>
+          {privacyMode === 'public' && (
+            <Ionicons name="checkmark-circle" size={24} color={COLORS.primary} />
+          )}
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.privacyOption}>
+          <View style={styles.privacyOptionContent}>
+            <Ionicons 
+              name="lock-closed" 
+              size={24} 
+              color={privacyMode === 'private' ? COLORS.primary : COLORS.gray} 
+            />
+            <View style={styles.privacyOptionTexts}>
+              <Text style={styles.privacyOptionTitle}>Private</Text>
+              <Text style={styles.privacyOptionDescription}>No one can see your activity</Text>
+            </View>
+          </View>
+          {privacyMode === 'private' && (
+            <Ionicons name="checkmark-circle" size={24} color={COLORS.primary} />
+          )}
+        </TouchableOpacity>
       </View>
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Account</Text>
         
-        <TouchableOpacity style={styles.menuItem}>
-          <View style={styles.menuItemContent}>
-            <Ionicons name="person-outline" size={24} color={COLORS.text.primary} />
-            <Text style={styles.menuItemText}>Edit Profile</Text>
-          </View>
-          <Ionicons name="chevron-forward" size={24} color={COLORS.gray} />
+        <TouchableOpacity style={styles.button}>
+          <Text style={styles.buttonText}>Edit Profile</Text>
         </TouchableOpacity>
         
-        <TouchableOpacity style={styles.menuItem}>
-          <View style={styles.menuItemContent}>
-            <Ionicons name="lock-closed-outline" size={24} color={COLORS.text.primary} />
-            <Text style={styles.menuItemText}>Change Password</Text>
-          </View>
-          <Ionicons name="chevron-forward" size={24} color={COLORS.gray} />
-        </TouchableOpacity>
-        
-        <TouchableOpacity style={styles.menuItem}>
-          <View style={styles.menuItemContent}>
-            <Ionicons name="cloud-download-outline" size={24} color={COLORS.text.primary} />
-            <Text style={styles.menuItemText}>Export Data</Text>
-          </View>
-          <Ionicons name="chevron-forward" size={24} color={COLORS.gray} />
+        <TouchableOpacity style={[styles.button, styles.dangerButton]}>
+          <Text style={styles.dangerButtonText}>Log Out</Text>
         </TouchableOpacity>
       </View>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Support</Text>
-        
-        <TouchableOpacity style={styles.menuItem}>
-          <View style={styles.menuItemContent}>
-            <Ionicons name="help-circle-outline" size={24} color={COLORS.text.primary} />
-            <Text style={styles.menuItemText}>Help & FAQ</Text>
-          </View>
-          <Ionicons name="chevron-forward" size={24} color={COLORS.gray} />
+      <View style={styles.footer}>
+        <Text style={styles.version}>SurfSUP v1.0.0</Text>
+        <TouchableOpacity>
+          <Text style={styles.link}>Privacy Policy</Text>
         </TouchableOpacity>
-        
-        <TouchableOpacity style={styles.menuItem}>
-          <View style={styles.menuItemContent}>
-            <Ionicons name="mail-outline" size={24} color={COLORS.text.primary} />
-            <Text style={styles.menuItemText}>Contact Us</Text>
-          </View>
-          <Ionicons name="chevron-forward" size={24} color={COLORS.gray} />
+        <TouchableOpacity>
+          <Text style={styles.link}>Terms of Service</Text>
         </TouchableOpacity>
-        
-        <TouchableOpacity style={styles.menuItem}>
-          <View style={styles.menuItemContent}>
-            <Ionicons name="document-text-outline" size={24} color={COLORS.text.primary} />
-            <Text style={styles.menuItemText}>Terms & Privacy</Text>
-          </View>
-          <Ionicons name="chevron-forward" size={24} color={COLORS.gray} />
-        </TouchableOpacity>
-      </View>
-
-      <TouchableOpacity 
-        style={styles.logoutButton}
-        onPress={handleLogout}
-      >
-        <Text style={styles.logoutButtonText}>Logout</Text>
-      </TouchableOpacity>
-
-      <View style={styles.version}>
-        <Text style={styles.versionText}>SurfSUP v1.0.0</Text>
       </View>
     </ScrollView>
   );
@@ -217,31 +172,43 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background,
   },
-  section: {
-    marginBottom: 24,
-    backgroundColor: COLORS.white,
-    borderRadius: 8,
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
     padding: 16,
-    marginHorizontal: 16,
-    marginTop: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.lightGray,
+  },
+  backButton: {
+    padding: 10,
+    marginRight: 10,
+    borderRadius: 8,
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: COLORS.text.primary,
+  },
+  section: {
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.lightGray,
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    marginBottom: 16,
     color: COLORS.text.primary,
+    marginBottom: 16,
   },
   settingRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.lightGray,
   },
   settingInfo: {
     flex: 1,
-    marginRight: 16,
+    paddingRight: 16,
   },
   settingLabel: {
     fontSize: 16,
@@ -252,68 +219,66 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: COLORS.text.secondary,
   },
-  unitSelector: {
+  privacyOption: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    borderRadius: 8,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: COLORS.lightGray,
-  },
-  unitButton: {
-    flex: 1,
-    paddingVertical: 12,
     alignItems: 'center',
-    backgroundColor: COLORS.white,
-  },
-  activeUnitButton: {
-    backgroundColor: COLORS.primary,
-  },
-  unitButtonText: {
-    fontSize: 14,
-    color: COLORS.text.primary,
-  },
-  activeUnitButtonText: {
-    color: COLORS.white,
-    fontWeight: 'bold',
-  },
-  menuItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
     paddingVertical: 16,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.lightGray,
   },
-  menuItemContent: {
+  privacyOptionContent: {
     flexDirection: 'row',
     alignItems: 'center',
+    flex: 1,
   },
-  menuItemText: {
-    fontSize: 16,
-    color: COLORS.text.primary,
+  privacyOptionTexts: {
     marginLeft: 16,
   },
-  logoutButton: {
-    marginHorizontal: 16,
-    marginVertical: 24,
-    backgroundColor: COLORS.error,
-    paddingVertical: 16,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  logoutButtonText: {
+  privacyOptionTitle: {
     fontSize: 16,
-    fontWeight: 'bold',
-    color: COLORS.white,
+    color: COLORS.text.primary,
+    marginBottom: 4,
   },
-  version: {
-    alignItems: 'center',
-    marginBottom: 40,
-  },
-  versionText: {
+  privacyOptionDescription: {
     fontSize: 14,
     color: COLORS.text.secondary,
+  },
+  button: {
+    backgroundColor: COLORS.primary,
+    borderRadius: 8,
+    paddingVertical: 14,
+    alignItems: 'center',
+    marginVertical: 8,
+  },
+  buttonText: {
+    color: COLORS.white,
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  dangerButton: {
+    backgroundColor: COLORS.white,
+    borderWidth: 1,
+    borderColor: COLORS.error,
+  },
+  dangerButtonText: {
+    color: COLORS.error,
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  footer: {
+    padding: 16,
+    alignItems: 'center',
+  },
+  version: {
+    fontSize: 14,
+    color: COLORS.text.secondary,
+    marginBottom: 8,
+  },
+  link: {
+    fontSize: 14,
+    color: COLORS.primary,
+    marginVertical: 4,
   },
 });
 

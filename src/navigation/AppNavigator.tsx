@@ -10,6 +10,7 @@ import FavoritesScreen from '../screens/FavoritesScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import SpotDetailsScreen from '../screens/SpotDetailsScreen';
 import LogSessionScreen from '../screens/LogSessionScreen';
+import SettingsScreen from '../screens/SettingsScreen';
 import { RootStackParamList, MainTabParamList } from './types';
 
 // Add debugging for the LogSessionScreen import
@@ -88,6 +89,15 @@ const AppNavigator = () => {
             headerShown: false,
             presentation: 'card',
             animation: 'slide_from_bottom'
+          }} 
+        />
+        <Stack.Screen 
+          name="Settings" 
+          component={SettingsScreen}
+          options={{ 
+            headerShown: false,
+            presentation: 'card',
+            animation: 'slide_from_right'
           }} 
         />
       </Stack.Navigator>
