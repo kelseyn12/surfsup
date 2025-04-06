@@ -1,11 +1,12 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { 
   StyleSheet, 
   View, 
   Text, 
   ScrollView, 
   TouchableOpacity, 
-  Switch 
+  Switch,
+  Alert
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -13,13 +14,64 @@ import { RootStackScreenProps } from '../navigation/types';
 import { COLORS } from '../constants';
 
 const SettingsScreen: React.FC = () => {
-  const navigation = useNavigation<RootStackScreenProps<'Settings'>['navigation']>();
+  const navigation = useNavigation();
   
   // Mock settings state
   const [notificationsEnabled, setNotificationsEnabled] = React.useState(true);
   const [locationEnabled, setLocationEnabled] = React.useState(true);
   const [darkModeEnabled, setDarkModeEnabled] = React.useState(false);
   const [privacyMode, setPrivacyMode] = React.useState('friends'); // 'public', 'friends', 'private'
+
+  // Toggle privacy mode
+  const togglePrivacyMode = (mode: string) => {
+    setPrivacyMode(mode);
+  };
+
+  // Handle dark mode toggle with visual feedback
+  const handleDarkModeToggle = (value: boolean) => {
+    setDarkModeEnabled(value);
+    Alert.alert(
+      "Dark Mode",
+      value ? "Dark mode enabled! This is a placeholder - full implementation would change app theme." : "Dark mode disabled.",
+      [{ text: "OK" }]
+    );
+  };
+
+  // Handle Edit Profile button press
+  const handleEditProfile = () => {
+    Alert.alert(
+      "Edit Profile",
+      "This would navigate to the Edit Profile screen in a full implementation.",
+      [{ text: "OK" }]
+    );
+  };
+
+  // Handle Logout button press
+  const handleLogout = () => {
+    Alert.alert(
+      "Log Out",
+      "Are you sure you want to log out?",
+      [
+        { text: "Cancel", style: "cancel" },
+        { 
+          text: "Log Out", 
+          style: "destructive",
+          onPress: () => {
+            Alert.alert("Logged Out", "You have been logged out successfully.");
+            navigation.navigate('Main');
+          }
+        }
+      ]
+    );
+  };
+
+  // Debug navigation
+  useEffect(() => {
+    console.log('Settings screen mounted, navigation object:', !!navigation);
+    return () => {
+      console.log('Settings screen unmounted');
+    };
+  }, []);
 
   return (
     <ScrollView style={styles.container}>
@@ -80,7 +132,7 @@ const SettingsScreen: React.FC = () => {
           </View>
           <Switch
             value={darkModeEnabled}
-            onValueChange={setDarkModeEnabled}
+            onValueChange={handleDarkModeToggle}
             trackColor={{ false: COLORS.lightGray, true: COLORS.primary }}
             thumbColor={COLORS.white}
           />
@@ -90,7 +142,10 @@ const SettingsScreen: React.FC = () => {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Privacy</Text>
         
-        <TouchableOpacity style={styles.privacyOption}>
+        <TouchableOpacity 
+          style={styles.privacyOption}
+          onPress={() => togglePrivacyMode('friends')}
+        >
           <View style={styles.privacyOptionContent}>
             <Ionicons 
               name="people" 
@@ -107,7 +162,10 @@ const SettingsScreen: React.FC = () => {
           )}
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.privacyOption}>
+        <TouchableOpacity 
+          style={styles.privacyOption}
+          onPress={() => togglePrivacyMode('public')}
+        >
           <View style={styles.privacyOptionContent}>
             <Ionicons 
               name="globe" 
@@ -124,7 +182,10 @@ const SettingsScreen: React.FC = () => {
           )}
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.privacyOption}>
+        <TouchableOpacity 
+          style={styles.privacyOption}
+          onPress={() => togglePrivacyMode('private')}
+        >
           <View style={styles.privacyOptionContent}>
             <Ionicons 
               name="lock-closed" 
@@ -145,11 +206,17 @@ const SettingsScreen: React.FC = () => {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Account</Text>
         
-        <TouchableOpacity style={styles.button}>
+        <TouchableOpacity 
+          style={styles.button}
+          onPress={handleEditProfile}
+        >
           <Text style={styles.buttonText}>Edit Profile</Text>
         </TouchableOpacity>
         
-        <TouchableOpacity style={[styles.button, styles.dangerButton]}>
+        <TouchableOpacity 
+          style={[styles.button, styles.dangerButton]}
+          onPress={handleLogout}
+        >
           <Text style={styles.dangerButtonText}>Log Out</Text>
         </TouchableOpacity>
       </View>
