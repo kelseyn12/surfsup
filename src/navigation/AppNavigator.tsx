@@ -87,8 +87,10 @@ const AppNavigator = () => {
           component={LogSessionScreen}
           options={{ 
             headerShown: false,
-            presentation: 'card',
-            animation: 'slide_from_bottom'
+            presentation: 'modal',
+            animation: 'slide_from_bottom',
+            gestureEnabled: true,
+            gestureDirection: 'vertical',
           }} 
         />
         <Stack.Screen 

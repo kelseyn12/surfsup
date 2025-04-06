@@ -515,7 +515,7 @@ const SpotDetailsScreen: React.FC = () => {
           </TouchableOpacity>
           <TouchableOpacity 
             style={[styles.actionButton, styles.secondaryButton]}
-            onPress={() => navigation.navigate('SessionLog', { spotId, spot })}
+            onPress={() => navigation.navigate('LogSession', { spotId, spot })}
           >
             <Ionicons name="add-circle-outline" size={20} color={COLORS.primary} />
             <Text style={[styles.actionButtonText, styles.secondaryButtonText]}>Log Session</Text>

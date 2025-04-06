@@ -229,7 +229,11 @@ const LogSessionScreen: React.FC = () => {
           title="Log Surf Session" 
           onBackPress={() => {
             console.log('Back button pressed in LogSessionScreen');
-            navigation.goBack();
+            if (navigation.canGoBack()) {
+              navigation.goBack();
+            } else {
+              navigation.navigate('Main');
+            }
           }}
         />
 
