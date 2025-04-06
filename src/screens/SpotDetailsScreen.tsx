@@ -7,9 +7,10 @@ import {
   TouchableOpacity, 
   Image,
   Alert,
-  ActivityIndicator
+  ActivityIndicator,
+  BackHandler,
+  Platform
 } from 'react-native';
-import { useRoute, useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { RootStackScreenProps } from '../navigation/types';
 import { COLORS } from '../constants';
@@ -29,12 +30,13 @@ import { isUserCheckedInAt, getGlobalSurferCount } from '../services/globalState
 import webSocketService, { WebSocketMessageType } from '../services/websocket';
 import { HeaderBar } from '../components';
 
-const SpotDetailsScreen: React.FC = () => {
-  const route = useRoute<RootStackScreenProps<'SpotDetails'>['route']>();
-  const navigation = useNavigation();
+const SpotDetailsScreen: React.FC<any> = (props) => {
+  // Use props directly instead of hooks
+  const route = props.route;
+  const navigation = props.navigation;
   
   // Get spot details from route params or use fallback
-  const { spotId, spot } = route.params || { spotId: '0', spot: { name: 'Unknown Spot' } };
+  const { spotId, spot } = route?.params || { spotId: '0', spot: { name: 'Unknown Spot' } };
   const [isFavorite, setIsFavorite] = useState(false);
   const [currentConditions, setCurrentConditions] = useState<SurfConditions | null>(null);
   const [forecast, setForecast] = useState<SurfConditions[]>([]);
@@ -339,6 +341,11 @@ const SpotDetailsScreen: React.FC = () => {
     };
   });
 
+  // Simple back button handler
+  const handleGoBack = () => {
+    navigation.goBack();
+  };
+
   if (isLoading && !currentConditions) {
     return (
       <View style={styles.loadingContainer}>
@@ -352,6 +359,7 @@ const SpotDetailsScreen: React.FC = () => {
     <View style={styles.container}>
       <HeaderBar 
         title={spot?.name || 'Spot Details'} 
+        onBackPress={handleGoBack}
         rightComponent={
           <TouchableOpacity onPress={toggleFavorite} style={styles.favoriteButton}>
             <Ionicons

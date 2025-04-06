@@ -6,15 +6,16 @@ import {
   ScrollView, 
   TouchableOpacity, 
   Switch,
-  Alert
+  Alert,
+  Platform,
+  BackHandler
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { HeaderBar } from '../components';
 import { COLORS } from '../constants';
 
-const SettingsScreen: React.FC = () => {
-  const navigation = useNavigation();
+const SettingsScreen: React.FC<any> = (props) => {
+  const navigation = props.navigation;
   
   // Mock settings state
   const [notificationsEnabled, setNotificationsEnabled] = React.useState(true);
@@ -65,11 +66,16 @@ const SettingsScreen: React.FC = () => {
     );
   };
 
+  // Simple back button handler
+  const handleBack = () => {
+    navigation.goBack();
+  };
+
   return (
     <ScrollView style={styles.container}>
       <HeaderBar 
         title="Settings" 
-        onBackPress={() => navigation.goBack()}
+        onBackPress={handleBack}
       />
 
       <View style={styles.section}>

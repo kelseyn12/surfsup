@@ -3,7 +3,7 @@ import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { COLORS } from './src/constants';
 import webSocketService from './src/services/websocket';
-import AppNavigator from './src/navigation/AppNavigator';
+import AppNavigator from './src/navigation';
 
 export default function App() {
   // Initialize the WebSocket connection at app startup

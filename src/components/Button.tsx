@@ -280,4 +280,34 @@ const styles = StyleSheet.create({
   },
 });
 
-export default Button; 
+export default Button;
+
+// Example for Cancel button implementation if needed
+export const CancelButton: React.FC<{ navigation?: any }> = ({ navigation }) => {
+  const handleCancel = () => {
+    console.log('[CancelButton] Cancel button pressed');
+    
+    // Simple back navigation
+    try {
+      if (navigation && navigation.canGoBack()) {
+        navigation.goBack();
+      } else if (navigation) {
+        navigation.navigate('Main');
+      }
+    } catch (error) {
+      console.error('[CancelButton] Navigation error:', error);
+      if (navigation) {
+        navigation.navigate('Main');
+      }
+    }
+  };
+
+  return (
+    <Button
+      title="Cancel"
+      onPress={handleCancel}
+      variant="outline"
+      size="large"
+    />
+  );
+}; 

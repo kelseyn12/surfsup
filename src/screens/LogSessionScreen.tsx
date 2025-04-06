@@ -12,23 +12,24 @@ import {
   KeyboardAvoidingView,
   Switch,
   Modal,
-  FlatList
+  FlatList,
+  BackHandler
 } from 'react-native';
-import { useRoute, useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { RootStackScreenProps } from '../navigation/types';
 import { COLORS } from '../constants';
 import { SurfSession, SurfSpot } from '../types';
 import { logSurfSession, fetchNearbySurfSpots } from '../services/api';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { HeaderBar, Button } from '../components';
+import { HeaderBar, Button, CancelButton } from '../components';
 
-const LogSessionScreen: React.FC = () => {
-  const route = useRoute<RootStackScreenProps<'LogSession'>['route']>();
-  const navigation = useNavigation<RootStackScreenProps<'LogSession'>['navigation']>();
+const LogSessionScreen: React.FC<any> = (props) => {
+  // Use props directly instead of hooks
+  const route = props.route;
+  const navigation = props.navigation;
   
   // Get parameters from route
-  const { spotId, checkInTime } = route.params || { spotId: null, checkInTime: null };
+  const { spotId, checkInTime } = route?.params || { spotId: null, checkInTime: null };
   const [spot, setSpot] = useState<SurfSpot | null>(null);
 
   // Session details
@@ -118,9 +119,8 @@ const LogSessionScreen: React.FC = () => {
     setQuality(quality);
   };
 
-  // Handle navigation back
+  // Simple back button handler
   const handleBack = useCallback(() => {
-    console.log('Back button pressed, navigating back');
     navigation.goBack();
   }, [navigation]);
 
@@ -227,7 +227,7 @@ const LogSessionScreen: React.FC = () => {
       <ScrollView style={styles.container}>
         <HeaderBar 
           title="Log Surf Session" 
-          onBackPress={() => navigation.goBack()}
+          onBackPress={handleBack}
         />
 
         <View style={styles.section}>
@@ -472,13 +472,7 @@ const LogSessionScreen: React.FC = () => {
         </View>
 
         <View style={styles.buttonContainer}>
-          <Button
-            title="Cancel"
-            onPress={() => navigation.goBack()}
-            variant="outline"
-            size="large"
-            style={styles.buttonSpacing}
-          />
+          <CancelButton navigation={navigation} />
           
           <Button
             title="Save Session"
@@ -487,17 +481,6 @@ const LogSessionScreen: React.FC = () => {
             size="large"
             loading={isSaving}
             style={styles.buttonSpacing}
-          />
-        </View>
-
-        {/* Emergency home button if needed */}
-        <View style={styles.emergencyBackContainer}>
-          <Button
-            title="Return to Home"
-            onPress={() => navigation.navigate('Main')}
-            variant="primary"
-            icon="home"
-            fullWidth
           />
         </View>
       </ScrollView>
@@ -710,27 +693,6 @@ const styles = StyleSheet.create({
   buttonSpacing: {
     flex: 1,
     marginHorizontal: 6,
-  },
-  emergencyBackContainer: {
-    paddingHorizontal: 16,
-    paddingBottom: 40,
-    alignItems: 'center',
-  },
-  emergencyBackButton: {
-    backgroundColor: COLORS.primary,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 8,
-    width: '100%',
-  },
-  emergencyBackText: {
-    color: COLORS.white,
-    fontWeight: 'bold',
-    fontSize: 16,
-    marginLeft: 8,
   },
   modalContainer: {
     flex: 1,
