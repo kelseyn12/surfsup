@@ -12,6 +12,9 @@ import SpotDetailsScreen from '../screens/SpotDetailsScreen';
 import LogSessionScreen from '../screens/LogSessionScreen';
 import { RootStackParamList, MainTabParamList } from './types';
 
+// Add debugging for the LogSessionScreen import
+console.log('LogSessionScreen imported:', LogSessionScreen ? 'YES' : 'NO');
+
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
@@ -57,6 +60,8 @@ const MainTabNavigator = () => {
 
 // Main stack navigator
 const AppNavigator = () => {
+  console.log('AppNavigator being rendered with LogSessionScreen available:', !!LogSessionScreen);
+  
   return (
     <NavigationContainer>
       <Stack.Navigator
