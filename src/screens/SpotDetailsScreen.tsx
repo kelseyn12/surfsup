@@ -9,7 +9,7 @@ import {
   Alert,
   ActivityIndicator
 } from 'react-native';
-import { useRoute, useNavigation, useFocusEffect } from '@react-navigation/native';
+import { useRoute, useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { RootStackScreenProps } from '../navigation/types';
 import { COLORS } from '../constants';
@@ -31,7 +31,17 @@ import { HeaderBar } from '../components';
 
 const SpotDetailsScreen: React.FC = () => {
   const route = useRoute<RootStackScreenProps<'SpotDetails'>['route']>();
-  const navigation = useNavigation<RootStackScreenProps<'SpotDetails'>['navigation']>();
+  const navigation = useNavigation();
+  
+  // Handle back navigation properly
+  const handleBackPress = () => {
+    console.log('SpotDetailsScreen: Back button pressed');
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+    } else {
+      navigation.navigate('Main');
+    }
+  };
   
   // Get spot details from route params or use fallback
   const { spotId, spot } = route.params || { spotId: '0', spot: { name: 'Unknown Spot' } };
@@ -352,7 +362,7 @@ const SpotDetailsScreen: React.FC = () => {
     <View style={styles.container}>
       <HeaderBar 
         title={spot?.name || 'Spot Details'} 
-        onBackPress={() => navigation.goBack()}
+        onBackPress={handleBackPress}
         rightComponent={
           <TouchableOpacity onPress={toggleFavorite} style={styles.favoriteButton}>
             <Ionicons
