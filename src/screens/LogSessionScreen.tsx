@@ -10,7 +10,9 @@ import {
   ActivityIndicator,
   Platform,
   KeyboardAvoidingView,
-  Switch
+  Switch,
+  Modal,
+  FlatList
 } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -45,12 +47,34 @@ const LogSessionScreen: React.FC = () => {
   const [notes, setNotes] = useState<string>('');
   const [includeInPublicActivity, setIncludeInPublicActivity] = useState(false);
 
+  // New state for spot picker
+  const [spotSearchText, setSpotSearchText] = useState('');
+  const [showSpotPicker, setShowSpotPicker] = useState(false);
+  const [availableSpots, setAvailableSpots] = useState<SurfSpot[]>([]);
+
   // Load spot details when component mounts
   useEffect(() => {
     if (spotId) {
       loadSpotDetails();
     }
   }, [spotId]);
+
+  // Load available spots
+  useEffect(() => {
+    const loadSpots = async () => {
+      try {
+        // Using hard-coded coordinates for Lake Superior for demo
+        const spots = await fetchNearbySurfSpots(46.7825, -92.0856);
+        if (spots) {
+          setAvailableSpots(spots);
+        }
+      } catch (error) {
+        console.error('Error loading available spots:', error);
+      }
+    };
+    
+    loadSpots();
+  }, []);
 
   const loadSpotDetails = async () => {
     setIsLoading(true);
@@ -158,6 +182,18 @@ const LogSessionScreen: React.FC = () => {
     }
   };
 
+  const selectSpot = (selectedSpot: SurfSpot) => {
+    setSpot(selectedSpot);
+    setShowSpotPicker(false);
+  };
+
+  const filteredSpots = spotSearchText.trim() === '' 
+    ? availableSpots 
+    : availableSpots.filter(spot => 
+        spot.name.toLowerCase().includes(spotSearchText.toLowerCase()) ||
+        (spot.location?.city && spot.location.city.toLowerCase().includes(spotSearchText.toLowerCase()))
+      );
+
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
@@ -182,13 +218,65 @@ const LogSessionScreen: React.FC = () => {
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Spot</Text>
-          <View style={styles.spotCard}>
-            <Text style={styles.spotName}>{spot?.name || 'Unknown Spot'}</Text>
-            <Text style={styles.spotLocation}>
-              {spot?.location?.city}{spot?.location?.state ? `, ${spot.location.state}` : ''}
-            </Text>
-          </View>
+          <TouchableOpacity 
+            style={styles.spotSelector}
+            onPress={() => setShowSpotPicker(true)}
+          >
+            <View>
+              <Text style={styles.spotName}>{spot?.name || 'Select a Surf Spot'}</Text>
+              {spot?.location && (
+                <Text style={styles.spotLocation}>
+                  {spot.location.city}{spot.location.state ? `, ${spot.location.state}` : ''}
+                </Text>
+              )}
+            </View>
+            <Ionicons name="chevron-down" size={24} color={COLORS.primary} />
+          </TouchableOpacity>
         </View>
+
+        {/* Spot Picker Modal */}
+        <Modal
+          visible={showSpotPicker}
+          animationType="slide"
+          transparent={true}
+        >
+          <View style={styles.modalContainer}>
+            <View style={styles.modalContent}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>Select Surf Spot</Text>
+                <TouchableOpacity onPress={() => setShowSpotPicker(false)}>
+                  <Ionicons name="close" size={24} color={COLORS.text.primary} />
+                </TouchableOpacity>
+              </View>
+              
+              <TextInput
+                style={styles.searchInput}
+                placeholder="Search spots..."
+                value={spotSearchText}
+                onChangeText={setSpotSearchText}
+              />
+              
+              <FlatList
+                data={filteredSpots}
+                keyExtractor={(item) => item.id}
+                renderItem={({ item }) => (
+                  <TouchableOpacity 
+                    style={styles.spotItem}
+                    onPress={() => selectSpot(item)}
+                  >
+                    <Text style={styles.spotItemName}>{item.name}</Text>
+                    {item.location && (
+                      <Text style={styles.spotItemLocation}>
+                        {item.location.city}{item.location.state ? `, ${item.location.state}` : ''}
+                      </Text>
+                    )}
+                  </TouchableOpacity>
+                )}
+                style={styles.spotList}
+              />
+            </View>
+          </View>
+        </Modal>
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Session Time</Text>
@@ -611,6 +699,68 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     color: COLORS.white,
+  },
+  spotSelector: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: COLORS.white,
+    borderRadius: 8,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: COLORS.lightGray,
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  modalContent: {
+    backgroundColor: COLORS.background,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 20,
+    maxHeight: '80%',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: COLORS.text.primary,
+  },
+  searchInput: {
+    backgroundColor: COLORS.white,
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: COLORS.lightGray,
+  },
+  spotList: {
+    maxHeight: 400,
+  },
+  spotItem: {
+    backgroundColor: COLORS.white,
+    borderRadius: 8,
+    padding: 16,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: COLORS.lightGray,
+  },
+  spotItemName: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: COLORS.text.primary,
+  },
+  spotItemLocation: {
+    fontSize: 14,
+    color: COLORS.text.secondary,
+    marginTop: 4,
   },
 });
 
