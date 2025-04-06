@@ -155,7 +155,7 @@ const ProfileScreen: React.FC = () => {
         ))}
         <TouchableOpacity 
           style={styles.viewAllButton}
-          onPress={() => navigation.navigate('SessionLog')}
+          onPress={() => navigation.navigate('LogSession', { spotId: 'stonypoint' })}
         >
           <Text style={styles.viewAllButtonText}>View All Sessions</Text>
         </TouchableOpacity>
@@ -164,7 +164,7 @@ const ProfileScreen: React.FC = () => {
       <View style={styles.actions}>
         <TouchableOpacity 
           style={styles.actionButton}
-          onPress={() => navigation.navigate('SessionLog')}
+          onPress={() => navigation.navigate('LogSession', { spotId: 'stonypoint' })}
         >
           <Ionicons name="add-circle-outline" size={20} color={COLORS.white} />
           <Text style={styles.actionButtonText}>Log Session</Text>
