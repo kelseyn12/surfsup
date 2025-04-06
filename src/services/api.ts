@@ -6,6 +6,11 @@ import {
   updateGlobalSurferCount, 
   updateUserCheckedInStatus 
 } from './globalState';
+import webSocketService, { 
+  WebSocketMessageType, 
+  SurferCountUpdateMessage,
+  CheckInStatusMessage
+} from './websocket';
 
 /**
  * API Service
@@ -334,8 +339,8 @@ export const getSurferCount = async (spotId: string): Promise<number> => {
     // Also update the local state to ensure it's in sync
     activeSurferCounts[spotId] = currentCount;
     
-    // Emit an event to ensure all components are updated
-    emitSurferCountUpdated(spotId, currentCount);
+    // No need to emit events here, as they'll come through WebSocket events
+    // This avoids duplicate updates
     
     return currentCount;
   } catch (error) {
@@ -391,9 +396,34 @@ export const checkInToSpot = async (
     console.log(`[DEBUG] User ${userId} checked in at ${spotId}. Current check-ins:`, activeCheckIns);
     console.log(`[DEBUG] Updated surfer counts:`, activeSurferCounts);
     
-    // Emit events to notify other parts of the app
+    // Create WebSocket messages
+    const surferCountMsg: SurferCountUpdateMessage = {
+      spotId,
+      count: activeSurferCounts[spotId],
+      lastUpdated: now.toISOString()
+    };
+    
+    const checkInStatusMsg: CheckInStatusMessage = {
+      userId,
+      spotId,
+      isCheckedIn: true,
+      timestamp: now.toISOString()
+    };
+    
+    // Send WebSocket messages to notify all clients
+    webSocketService.send({
+      type: WebSocketMessageType.SURFER_COUNT_UPDATE,
+      payload: surferCountMsg
+    });
+    
+    webSocketService.send({
+      type: WebSocketMessageType.CHECK_IN_STATUS_CHANGE,
+      payload: checkInStatusMsg
+    });
+    
+    // For backward compatibility, still emit events
     emitCheckInStatusChanged(spotId, true);
-    updateSurferCount(spotId, activeSurferCounts[spotId]);
+    emitSurferCountUpdated(spotId, activeSurferCounts[spotId]);
     
     return checkIn;
   } catch (error) {
@@ -441,9 +471,36 @@ export const checkOutFromSpot = async (checkInId: string): Promise<boolean> => {
       console.log(`[DEBUG] Successfully checked out from ${foundSpotId}. Updated check-ins:`, activeCheckIns);
       console.log(`[DEBUG] Updated surfer counts:`, activeSurferCounts);
       
-      // Emit events to notify other parts of the app
+      const now = new Date();
+      
+      // Create WebSocket messages
+      const surferCountMsg: SurferCountUpdateMessage = {
+        spotId: foundSpotId,
+        count: activeSurferCounts[foundSpotId],
+        lastUpdated: now.toISOString()
+      };
+      
+      const checkInStatusMsg: CheckInStatusMessage = {
+        userId: foundCheckIn.userId,
+        spotId: foundSpotId,
+        isCheckedIn: false,
+        timestamp: now.toISOString()
+      };
+      
+      // Send WebSocket messages to notify all clients
+      webSocketService.send({
+        type: WebSocketMessageType.SURFER_COUNT_UPDATE,
+        payload: surferCountMsg
+      });
+      
+      webSocketService.send({
+        type: WebSocketMessageType.CHECK_IN_STATUS_CHANGE,
+        payload: checkInStatusMsg
+      });
+      
+      // For backward compatibility, still emit events
       emitCheckInStatusChanged(foundSpotId, false);
-      updateSurferCount(foundSpotId, activeSurferCounts[foundSpotId]);
+      emitSurferCountUpdated(foundSpotId, activeSurferCounts[foundSpotId]);
       
       return true;
     }

@@ -6,8 +6,8 @@ import { SurfSpot, SurfConditions } from '../types';
 import { COLORS, SPACING } from '../constants';
 import { formatWaveHeight, formatWind, formatTemperature } from '../utils/formatters';
 import { fetchSurfConditions, getSurferCount } from '../services/api';
-import { eventEmitter, AppEvents } from '../services/events';
 import { getGlobalSurferCount } from '../services/globalState';
+import webSocketService, { WebSocketMessageType, WebSocketMessage } from '../services/websocket';
 
 interface SurfSpotCardProps {
   spot: SurfSpot;
@@ -48,23 +48,25 @@ const SurfSpotCard: React.FC<SurfSpotCardProps> = ({
       updateSurferCount();
     }
     
-    const handleSurferCountUpdate = (data: { spotId: string, count: number }) => {
-      if (data.spotId === spot.id) {
-        console.log(`[SurfSpotCard] Received update for ${spot.name}: ${data.count} surfers`);
-        setCurrentSurferCount(data.count);
+    // Subscribe to WebSocket updates for this spot
+    const unsubscribe = webSocketService.subscribe(
+      WebSocketMessageType.SURFER_COUNT_UPDATE,
+      (message: WebSocketMessage) => {
+        if (message.payload.spotId === spot.id) {
+          console.log(`[WebSocket] Received surfer count update for ${spot.name}: ${message.payload.count}`);
+          setCurrentSurferCount(message.payload.count);
+        }
       }
-    };
-
-    // Register event listener
-    eventEmitter.on(AppEvents.SURFER_COUNT_UPDATED, handleSurferCountUpdate);
+    );
     
-    // Update the count every 3 seconds to ensure freshness
-    const intervalId = setInterval(updateSurferCount, 3000);
-
+    // Make sure WebSocket is connected
+    if (!webSocketService.isConnected) {
+      webSocketService.connect();
+    }
+    
     // Clean up
     return () => {
-      eventEmitter.off(AppEvents.SURFER_COUNT_UPDATED, handleSurferCountUpdate);
-      clearInterval(intervalId);
+      unsubscribe();
     };
   }, [spot.id]);
 

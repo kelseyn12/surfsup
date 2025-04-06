@@ -17,6 +17,7 @@ import SessionDetailsScreen from '../screens/SessionDetailsScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import AuthScreen from '../screens/AuthScreen';
 import OnBoardingScreen from '../screens/OnBoardingScreen';
+import DebugScreen from '../screens/DebugScreen';
 
 // Import icons
 import { Ionicons } from '@expo/vector-icons';
@@ -126,6 +127,11 @@ const AppNavigator = () => {
           name="OnBoarding" 
           component={OnBoardingScreen} 
           options={{ headerShown: false }}
+        />
+        <Stack.Screen 
+          name="Debug" 
+          component={DebugScreen} 
+          options={{ title: 'Debug' }}
         />
       </Stack.Navigator>
     </NavigationContainer>

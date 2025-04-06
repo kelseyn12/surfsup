@@ -6,7 +6,7 @@ import { COLORS } from '../constants';
 import { SurfSpotCard } from '../components';
 import { SurfSpot } from '../types';
 import { fetchNearbySurfSpots, getSurferCount } from '../services/api';
-import { eventEmitter, AppEvents } from '../services/events';
+import { getGlobalSurferCount } from '../services/globalState';
 
 const HomeScreen: React.FC = () => {
   const navigation = useNavigation<MainTabScreenProps<'Home'>['navigation']>();
@@ -14,43 +14,43 @@ const HomeScreen: React.FC = () => {
   const [nearbySpots, setNearbySpots] = useState<SurfSpot[]>([]);
   const [loading, setLoading] = useState(false);
 
-  // Initial load of nearby spots
-  useEffect(() => {
-    loadNearbySpots();
-  }, []);
-
-  // Set up event listener for surfer count updates
-  useEffect(() => {
-    const handleSurferCountUpdate = (data: { spotId: string, count: number }) => {
-      console.log(`[EVENT] HomeScreen received surfer count update for ${data.spotId}: ${data.count}`);
-      
-      // Update the surfer count for the specific spot
-      setNearbySpots(currentSpots => 
-        currentSpots.map(spot => 
-          spot.id === data.spotId 
-            ? { ...spot, currentSurferCount: data.count } 
-            : spot
-        )
-      );
-    };
-
-    // Register event listener
-    eventEmitter.on(AppEvents.SURFER_COUNT_UPDATED, handleSurferCountUpdate);
-
-    // Cleanup listener on unmount
-    return () => {
-      eventEmitter.off(AppEvents.SURFER_COUNT_UPDATED, handleSurferCountUpdate);
-    };
-  }, []);
-
-  // Always refresh the data when coming back to this screen
+  // Refresh spots and surfer counts when screen comes into focus
   useFocusEffect(
     React.useCallback(() => {
       console.log('[DEBUG] HomeScreen focused, refreshing data');
       loadNearbySpots();
-      return () => {};
+      
+      // Also set up a refresh interval while this screen is focused
+      const intervalId = setInterval(() => {
+        // Just re-fetch surfer counts without loading all spots
+        refreshSurferCounts();
+      }, 5000); // Check every 5 seconds
+      
+      return () => {
+        // Clear interval when screen loses focus
+        clearInterval(intervalId);
+      };
     }, [])
   );
+
+  // Function to refresh only the surfer counts without reloading the spots
+  const refreshSurferCounts = () => {
+    if (nearbySpots.length === 0) return;
+    
+    console.log('[DEBUG] Refreshing just the surfer counts');
+    
+    // Create a new array with updated counts
+    const updatedSpots = nearbySpots.map(spot => {
+      const count = getGlobalSurferCount(spot.id);
+      return {
+        ...spot,
+        currentSurferCount: count
+      };
+    });
+    
+    // Update the state
+    setNearbySpots(updatedSpots);
+  };
 
   const loadNearbySpots = async () => {
     try {
@@ -60,13 +60,11 @@ const HomeScreen: React.FC = () => {
       if (spots) {
         console.log('[DEBUG] HomeScreen loaded spots:', spots.length);
         
-        // Make sure each spot shows the latest surfer count
-        const updatedSpots = [...spots];
-        for (let i = 0; i < updatedSpots.length; i++) {
-          const latestCount = await getSurferCount(updatedSpots[i].id);
-          console.log(`[DEBUG] Getting latest count for ${updatedSpots[i].name}: ${latestCount}`);
-          updatedSpots[i].currentSurferCount = latestCount;
-        }
+        // Make sure each spot shows the latest surfer count by reading from global state
+        const updatedSpots = spots.map(spot => ({
+          ...spot,
+          currentSurferCount: getGlobalSurferCount(spot.id)
+        }));
         
         setNearbySpots(updatedSpots);
       }

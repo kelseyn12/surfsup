@@ -26,6 +26,7 @@ import {
 } from '../services/api';
 import { eventEmitter, AppEvents } from '../services/events';
 import { isUserCheckedInAt, getGlobalSurferCount } from '../services/globalState';
+import webSocketService, { WebSocketMessageType } from '../services/websocket';
 
 const SpotDetailsScreen: React.FC = () => {
   const route = useRoute<RootStackScreenProps<'SpotDetails'>['route']>();
@@ -52,38 +53,52 @@ const SpotDetailsScreen: React.FC = () => {
     checkExistingCheckIn();
   }, [spotId]);
   
-  // Re-check user's check-in status and update counts when screen comes into focus
-  useFocusEffect(
-    React.useCallback(() => {
-      console.log(`[DEBUG] Screen focused for spot ${spotId}, checking check-in status and counts`);
-      
-      // First, check if the user is checked in at this specific spot using global state
-      const checkedInHere = isUserCheckedInAt(spotId);
-      console.log(`[DEBUG] Global state says user is ${checkedInHere ? '' : 'NOT '}checked in at ${spotId}`);
-      setIsCheckedIn(checkedInHere);
-      
-      // Get current surfer count from global state
-      const currentCount = getGlobalSurferCount(spotId);
-      console.log(`[DEBUG] Global state says surfer count at ${spotId} is ${currentCount}`);
-      setSurferCount(currentCount);
-      
-      // Also verify with the API
-      checkExistingCheckIn();
-      refreshSurferCount();
-      
-      return () => {};
-    }, [spotId])
-  );
-
-  // Refresh the surfer count from the API
-  const refreshSurferCount = async () => {
-    try {
-      const count = await getSurferCount(spotId);
-      setSurferCount(count);
-    } catch (error) {
-      console.error('Error refreshing surfer count:', error);
+  // Listen for WebSocket updates about surfer counts
+  useEffect(() => {
+    // Subscribe to WebSocket updates for this spot
+    const unsubscribe = webSocketService.subscribe(
+      WebSocketMessageType.SURFER_COUNT_UPDATE,
+      (message) => {
+        if (message.payload.spotId === spotId) {
+          console.log(`[WebSocket] Received surfer count update for current spot: ${message.payload.count}`);
+          setSurferCount(message.payload.count);
+        }
+      }
+    );
+    
+    // Initial connection if needed
+    if (!webSocketService.isConnected) {
+      webSocketService.connect();
     }
-  };
+    
+    return () => {
+      unsubscribe();
+    };
+  }, [spotId]);
+
+  // Listen for WebSocket updates about check-in status
+  useEffect(() => {
+    // Subscribe to check-in status changes
+    const unsubscribe = webSocketService.subscribe(
+      WebSocketMessageType.CHECK_IN_STATUS_CHANGE,
+      (message) => {
+        // We only care about our own user's check-ins
+        if (message.payload.userId === 'test-user-id' && message.payload.spotId === spotId) {
+          console.log(`[WebSocket] Received check-in status update for current spot: ${message.payload.isCheckedIn}`);
+          setIsCheckedIn(message.payload.isCheckedIn);
+          
+          // If checked out, also clear the check-in ID
+          if (!message.payload.isCheckedIn) {
+            setCheckInId(null);
+          }
+        }
+      }
+    );
+    
+    return () => {
+      unsubscribe();
+    };
+  }, [spotId]);
 
   const loadData = async () => {
     setIsLoading(true);
@@ -521,7 +536,7 @@ const styles = StyleSheet.create({
     padding: 16,
     backgroundColor: COLORS.white,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
+    borderBottomColor: COLORS.lightGray,
   },
   spotTitleContainer: {
     flex: 1,
@@ -706,6 +721,14 @@ const styles = StyleSheet.create({
   noDataText: {
     fontSize: 16,
     color: COLORS.text.secondary,
+  },
+  modalContent: {
+    backgroundColor: COLORS.background,
+    padding: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: COLORS.lightGray,
   },
 });
 

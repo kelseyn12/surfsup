@@ -13,6 +13,7 @@ export type RootStackParamList = {
   Settings: undefined;
   Auth: undefined;
   OnBoarding: undefined;
+  Debug: undefined;
 };
 
 // Bottom tab navigator params

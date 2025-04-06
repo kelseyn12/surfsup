@@ -177,6 +177,17 @@ const ProfileScreen: React.FC = () => {
           <Text style={[styles.actionButtonText, styles.secondaryButtonText]}>Settings</Text>
         </TouchableOpacity>
       </View>
+      
+      {/* Debug Button - only visible in development */}
+      <View style={styles.debugSection}>
+        <TouchableOpacity 
+          style={styles.debugButton}
+          onPress={() => navigation.navigate('Debug')}
+        >
+          <Ionicons name="bug-outline" size={20} color={COLORS.white} />
+          <Text style={styles.debugButtonText}>Debug Panel</Text>
+        </TouchableOpacity>
+      </View>
     </ScrollView>
   );
 };
@@ -322,6 +333,24 @@ const styles = StyleSheet.create({
   },
   secondaryButtonText: {
     color: COLORS.primary,
+  },
+  debugSection: {
+    alignItems: 'center',
+    padding: 16,
+  },
+  debugButton: {
+    backgroundColor: COLORS.primary,
+    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  debugButtonText: {
+    color: COLORS.white,
+    fontWeight: '600',
+    marginLeft: 8,
   },
 });
 

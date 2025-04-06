@@ -149,11 +149,31 @@ NDBC buoys (Lake Superior, seasonal).
 Mapbox (mapping, scalable).
 Future: Surfline slot-in.
 Hosting: AWS or Firebase (scalable infrastructure).
-4.2 Performance
+
+4.2 Real-Time Architecture
+WebSocket Infrastructure:
+- WebSocket server for bidirectional real-time communication
+- Maintains persistent connections for instant updates
+- Enables push notifications for surfer count changes
+- Reduces polling frequency and network overhead
+
+Real-Time Use Cases:
+- Surfer count updates: When users check in/out, all connected clients receive immediate updates
+- Check-in status changes: User's status is broadcast to all relevant users
+- Activity notifications: Push notifications when friends check in nearby
+
+Scalability Considerations:
+- Connection pooling to handle thousands of simultaneous connections
+- Message queueing to manage high-volume update scenarios
+- Fallback to HTTP polling if WebSocket connection fails
+- AWS ElastiCache for distributed state management across multiple server instances
+
+4.3 Performance
 API calls: <500ms latency.
 Map load: <2 seconds.
 Real-time updates: <1-second delay.
-4.3 Scalability
+WebSocket message delivery: <200ms latency.
+4.4 Scalability
 Supports 100-1,000+ users.
 Modular spot database for global expansion.
 API framework extensible to new sources.

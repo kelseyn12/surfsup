@@ -150,6 +150,15 @@ Real-Time Surfer Count Feature
   □ Add privacy settings for check-ins.
   □ Implement surfer count history.
 
+Real-Time WebSocket Architecture
+  X Create mock WebSocket service for real-time updates.
+  □ Connect WebSocket service to API endpoints for check-ins/outs.
+  □ Update components to subscribe to WebSocket events instead of polling.
+  □ Add connection status indicator and reconnection logic.
+  □ Implement message queuing for offline/reconnection scenarios.
+  □ Add server-side WebSocket implementation (future).
+  □ Implement scaling solution for thousands of concurrent connections (future).
+
 Frontend Screens
   X Home Screen - Implement surf conditions view.
   X Map View - Implement map with surf spot pins.
