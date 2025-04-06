@@ -8,7 +8,7 @@ import {
   Switch,
   Alert
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, CommonActions } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { RootStackScreenProps } from '../navigation/types';
 import { COLORS } from '../constants';
@@ -58,7 +58,11 @@ const SettingsScreen: React.FC = () => {
           style: "destructive",
           onPress: () => {
             Alert.alert("Logged Out", "You have been logged out successfully.");
-            navigation.navigate('Main');
+            navigation.dispatch(
+              CommonActions.navigate({
+                name: 'Main'
+              })
+            );
           }
         }
       ]
@@ -73,14 +77,35 @@ const SettingsScreen: React.FC = () => {
     };
   }, []);
 
+  const handleBackPress = () => {
+    console.log('Back button pressed in Settings with dispatch');
+    // Try multiple navigation approaches for better compatibility
+    try {
+      navigation.dispatch(CommonActions.goBack());
+    } catch (error) {
+      console.log('Error with CommonActions.goBack():', error);
+      try {
+        // Fallback to navigate to Profile
+        navigation.dispatch(
+          CommonActions.navigate({
+            name: 'Main',
+            params: {
+              screen: 'Profile'
+            }
+          })
+        );
+      } catch (innerError) {
+        console.log('Error with fallback navigation:', innerError);
+        Alert.alert('Navigation Error', 'Unable to go back. Please try again.');
+      }
+    }
+  };
+
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity 
-          onPress={() => {
-            console.log('Back button pressed in Settings');
-            navigation.goBack();
-          }} 
+          onPress={handleBackPress}
           style={styles.backButton}
         >
           <Ionicons name="arrow-back" size={28} color={COLORS.primary} />
