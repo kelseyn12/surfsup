@@ -9,7 +9,7 @@ import {
   Alert,
   ActivityIndicator
 } from 'react-native';
-import { useRoute, useNavigation } from '@react-navigation/native';
+import { useRoute, useNavigation, CommonActions } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { RootStackScreenProps } from '../navigation/types';
 import { COLORS } from '../constants';
@@ -33,14 +33,10 @@ const SpotDetailsScreen: React.FC = () => {
   const route = useRoute<RootStackScreenProps<'SpotDetails'>['route']>();
   const navigation = useNavigation();
   
-  // Handle back navigation properly
+  // Handle back navigation properly with CommonActions
   const handleBackPress = () => {
-    console.log('SpotDetailsScreen: Back button pressed');
-    if (navigation.canGoBack()) {
-      navigation.goBack();
-    } else {
-      navigation.navigate('Main');
-    }
+    console.log('SpotDetailsScreen: Back button pressed with CommonActions');
+    navigation.dispatch(CommonActions.goBack());
   };
   
   // Get spot details from route params or use fallback

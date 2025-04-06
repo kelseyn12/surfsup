@@ -8,7 +8,7 @@ import {
   Switch,
   Alert
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, CommonActions } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { HeaderBar } from '../components';
 import { COLORS } from '../constants';
@@ -67,7 +67,13 @@ const SettingsScreen: React.FC = () => {
 
   return (
     <ScrollView style={styles.container}>
-      <HeaderBar title="Settings" />
+      <HeaderBar 
+        title="Settings" 
+        onBackPress={() => {
+          console.log('Back button pressed in SettingsScreen');
+          navigation.dispatch(CommonActions.goBack());
+        }}
+      />
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Notifications</Text>
