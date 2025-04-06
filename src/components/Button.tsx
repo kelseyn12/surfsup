@@ -31,6 +31,17 @@ interface ButtonProps {
 
 /**
  * A reusable button component with different variants and sizes
+ * 
+ * Usage example:
+ * <Button 
+ *   title="Submit" 
+ *   onPress={handleSubmit} 
+ *   variant="primary" 
+ *   size="medium"
+ *   icon="checkmark-circle"
+ *   loading={isSubmitting}
+ *   disabled={!isValid}
+ * />
  */
 const Button: React.FC<ButtonProps> = ({
   title,

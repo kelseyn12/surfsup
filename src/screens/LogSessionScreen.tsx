@@ -21,7 +21,7 @@ import { COLORS } from '../constants';
 import { SurfSession, SurfSpot } from '../types';
 import { logSurfSession, fetchNearbySurfSpots } from '../services/api';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { HeaderBar } from '../components';
+import { HeaderBar, Button } from '../components';
 
 const LogSessionScreen: React.FC = () => {
   const route = useRoute<RootStackScreenProps<'LogSession'>['route']>();
@@ -475,43 +475,33 @@ const LogSessionScreen: React.FC = () => {
         </View>
 
         <View style={styles.buttonContainer}>
-          <TouchableOpacity 
-            style={[styles.button, styles.cancelButton]} 
-            onPress={() => {
-              console.log('Cancel button pressed');
-              try {
-                navigation.goBack();
-              } catch (error) {
-                console.error('Navigation error in Cancel:', error);
-                navigation.navigate('Main');
-              }
-            }}
-          >
-            <Text style={styles.cancelButtonText}>Cancel</Text>
-          </TouchableOpacity>
+          <Button
+            title="Cancel"
+            onPress={() => navigation.goBack()}
+            variant="outline"
+            size="large"
+            style={styles.buttonSpacing}
+          />
           
-          <TouchableOpacity 
-            style={[styles.button, styles.saveButton]} 
+          <Button
+            title="Save Session"
             onPress={handleSaveSession}
-            disabled={isSaving}
-          >
-            {isSaving ? (
-              <ActivityIndicator size="small" color={COLORS.white} />
-            ) : (
-              <Text style={styles.saveButtonText}>Save Session</Text>
-            )}
-          </TouchableOpacity>
+            variant="primary"
+            size="large"
+            loading={isSaving}
+            style={styles.buttonSpacing}
+          />
         </View>
 
-        {/* Emergency back button */}
+        {/* Emergency home button if needed */}
         <View style={styles.emergencyBackContainer}>
-          <TouchableOpacity 
-            style={styles.emergencyBackButton}
+          <Button
+            title="Return to Home"
             onPress={() => navigation.navigate('Main')}
-          >
-            <Ionicons name="home" size={24} color={COLORS.white} />
-            <Text style={styles.emergencyBackText}>Return to Home</Text>
-          </TouchableOpacity>
+            variant="primary"
+            icon="home"
+            fullWidth
+          />
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -719,43 +709,31 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     padding: 16,
-    paddingBottom: 32, // Extra padding at the bottom for safety
   },
-  button: {
+  buttonSpacing: {
     flex: 1,
-    height: 48,
-    borderRadius: 8,
-    justifyContent: 'center',
+    marginHorizontal: 6,
+  },
+  emergencyBackContainer: {
+    paddingHorizontal: 16,
+    paddingBottom: 40,
     alignItems: 'center',
-    marginHorizontal: 8,
   },
-  cancelButton: {
-    backgroundColor: COLORS.white,
-    borderWidth: 1,
-    borderColor: COLORS.primary,
-  },
-  saveButton: {
+  emergencyBackButton: {
     backgroundColor: COLORS.primary,
-  },
-  cancelButtonText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: COLORS.primary,
-  },
-  saveButtonText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: COLORS.white,
-  },
-  spotSelector: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: COLORS.white,
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
     borderRadius: 8,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: COLORS.lightGray,
+    width: '100%',
+  },
+  emergencyBackText: {
+    color: COLORS.white,
+    fontWeight: 'bold',
+    fontSize: 16,
+    marginLeft: 8,
   },
   modalContainer: {
     flex: 1,
@@ -808,27 +786,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: COLORS.text.secondary,
     marginTop: 4,
-  },
-  emergencyBackContainer: {
-    paddingHorizontal: 16,
-    paddingBottom: 40,
-    alignItems: 'center',
-  },
-  emergencyBackButton: {
-    backgroundColor: COLORS.primary,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 8,
-    width: '100%',
-  },
-  emergencyBackText: {
-    color: COLORS.white,
-    fontWeight: 'bold',
-    fontSize: 16,
-    marginLeft: 8,
   },
 });
 
