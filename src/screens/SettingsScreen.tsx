@@ -8,19 +8,12 @@ import {
   Switch,
   Alert
 } from 'react-native';
-import { 
-  useNavigation, 
-  CommonActions, 
-  ParamListBase,
-  StackActions
-} from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../constants';
 
 const SettingsScreen: React.FC = () => {
-  // Use the basic NativeStackNavigationProp for better compatibility
-  const navigation = useNavigation<NativeStackNavigationProp<ParamListBase>>();
+  const navigation = useNavigation();
   
   // Mock settings state
   const [notificationsEnabled, setNotificationsEnabled] = React.useState(true);
@@ -64,60 +57,19 @@ const SettingsScreen: React.FC = () => {
           style: "destructive",
           onPress: () => {
             Alert.alert("Logged Out", "You have been logged out successfully.");
-            navigation.reset({
-              index: 0,
-              routes: [{ name: 'Main' }],
-            });
+            navigation.navigate('Main');
           }
         }
       ]
     );
   };
 
-  // Debug navigation
-  useEffect(() => {
-    console.log('Settings screen mounted, navigation object:', !!navigation);
-    return () => {
-      console.log('Settings screen unmounted');
-    };
-  }, []);
-
-  // Simple back handler that tries multiple methods
-  const handleBackPress = () => {
-    console.log('Back button pressed in Settings - attempting navigation');
-    
-    // First try pop
-    try {
-      navigation.pop();
-      return;
-    } catch (e) {
-      console.log('Pop failed:', e);
-    }
-
-    // Then try goBack
-    try {
-      navigation.goBack();
-      return;
-    } catch (e) {
-      console.log('GoBack failed:', e);
-    }
-
-    // Finally, navigate explicitly to Main/Profile
-    try {
-      navigation.navigate('Main', { screen: 'Profile' });
-    } catch (e) {
-      console.log('Navigate failed:', e);
-      Alert.alert('Navigation Error', 'Could not return to previous screen.');
-    }
-  };
-
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity 
-          onPress={handleBackPress}
+          onPress={() => navigation.goBack()}
           style={styles.backButton}
-          testID="settingsBackButton"
         >
           <Ionicons name="arrow-back" size={28} color={COLORS.primary} />
         </TouchableOpacity>
