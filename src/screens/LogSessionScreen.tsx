@@ -14,7 +14,7 @@ import {
   Modal,
   FlatList
 } from 'react-native';
-import { useRoute, useNavigation, CommonActions } from '@react-navigation/native';
+import { useRoute, useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { RootStackScreenProps } from '../navigation/types';
 import { COLORS } from '../constants';
@@ -227,11 +227,7 @@ const LogSessionScreen: React.FC = () => {
       <ScrollView style={styles.container}>
         <HeaderBar 
           title="Log Surf Session" 
-          onBackPress={() => {
-            console.log('Back button pressed in LogSessionScreen');
-            navigation.dispatch(CommonActions.goBack());
-          }}
-          forceMainBackNavigation={!route.params?.spotId}
+          onBackPress={() => navigation.goBack()}
         />
 
         <View style={styles.section}>

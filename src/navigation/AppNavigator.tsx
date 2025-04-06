@@ -77,21 +77,14 @@ const AppNavigator = () => {
           name="SpotDetails" 
           component={SpotDetailsScreen}
           options={{ 
-            headerShown: false,
-            presentation: 'card',
-            animation: 'slide_from_right',
-            gestureEnabled: true
+            headerShown: false
           }} 
         />
         <Stack.Screen 
           name="LogSession" 
           component={LogSessionScreen}
           options={{ 
-            headerShown: false,
-            presentation: 'modal',
-            animation: 'slide_from_bottom',
-            gestureEnabled: true,
-            gestureDirection: 'vertical',
+            headerShown: false
           }} 
         />
         <Stack.Screen 
