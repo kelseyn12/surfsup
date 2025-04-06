@@ -226,11 +226,20 @@ const LogSessionScreen: React.FC = () => {
       <ScrollView style={styles.container}>
         <View style={styles.header}>
           <TouchableOpacity 
-            onPress={handleBack} 
-            style={styles.backButton} 
-            activeOpacity={0.7}
+            onPress={() => {
+              console.log('Back button directly using navigation.goBack()');
+              // Try different navigation methods
+              try {
+                navigation.goBack();
+              } catch (error) {
+                console.error('Navigation error:', error);
+                // Fallback to Main if goBack fails
+                navigation.navigate('Main');
+              }
+            }} 
+            style={styles.backButtonEnhanced}
           >
-            <Ionicons name="arrow-back" size={24} color={COLORS.text.primary} />
+            <Ionicons name="arrow-back" size={28} color={COLORS.primary} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Log Surf Session</Text>
         </View>
@@ -479,7 +488,15 @@ const LogSessionScreen: React.FC = () => {
         <View style={styles.buttonContainer}>
           <TouchableOpacity 
             style={[styles.button, styles.cancelButton]} 
-            onPress={handleBack}
+            onPress={() => {
+              console.log('Cancel button pressed');
+              try {
+                navigation.goBack();
+              } catch (error) {
+                console.error('Navigation error in Cancel:', error);
+                navigation.navigate('Main');
+              }
+            }}
           >
             <Text style={styles.cancelButtonText}>Cancel</Text>
           </TouchableOpacity>
@@ -494,6 +511,17 @@ const LogSessionScreen: React.FC = () => {
             ) : (
               <Text style={styles.saveButtonText}>Save Session</Text>
             )}
+          </TouchableOpacity>
+        </View>
+
+        {/* Emergency back button */}
+        <View style={styles.emergencyBackContainer}>
+          <TouchableOpacity 
+            style={styles.emergencyBackButton}
+            onPress={() => navigation.navigate('Main')}
+          >
+            <Ionicons name="home" size={24} color={COLORS.white} />
+            <Text style={styles.emergencyBackText}>Return to Home</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -537,6 +565,17 @@ const styles = StyleSheet.create({
   },
   backButton: {
     padding: 8,
+  },
+  backButtonEnhanced: {
+    padding: 15,
+    marginRight: 10,
+    borderRadius: 8,
+    backgroundColor: COLORS.white,
+    shadowColor: COLORS.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   headerTitle: {
     fontSize: 20,
@@ -780,6 +819,27 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: COLORS.text.secondary,
     marginTop: 4,
+  },
+  emergencyBackContainer: {
+    paddingHorizontal: 16,
+    paddingBottom: 40,
+    alignItems: 'center',
+  },
+  emergencyBackButton: {
+    backgroundColor: COLORS.primary,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    width: '100%',
+  },
+  emergencyBackText: {
+    color: COLORS.white,
+    fontWeight: 'bold',
+    fontSize: 16,
+    marginLeft: 8,
   },
 });
 
