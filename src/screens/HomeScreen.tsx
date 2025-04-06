@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, RefreshControl, Alert } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { MainTabScreenProps } from '../navigation/types';
 import { COLORS } from '../constants';
 import { SurfSpotCard } from '../components';
 import { SurfSpot } from '../types';
-import { fetchNearbySurfSpots, getSurferCount } from '../services/api';
+import { fetchNearbySurfSpots, getSurferCount, resetAllCheckInsAndCounts } from '../services/api';
 import { getGlobalSurferCount } from '../services/globalState';
+import { Ionicons } from '@expo/vector-icons';
 
 const HomeScreen: React.FC = () => {
   const navigation = useNavigation<MainTabScreenProps<'Home'>['navigation']>();
@@ -83,6 +84,10 @@ const HomeScreen: React.FC = () => {
     });
   }, []);
 
+  const handleSearch = () => {
+    // Implement search functionality
+  };
+
   return (
     <ScrollView 
       style={styles.container}
@@ -97,6 +102,23 @@ const HomeScreen: React.FC = () => {
       <View style={styles.header}>
         <Text style={styles.headerTitle}>SurfSUP</Text>
         <Text style={styles.headerSubtitle}>Lake Superior Surf Forecast</Text>
+        <View style={styles.headerActions}>
+          <TouchableOpacity onPress={handleSearch} style={styles.iconButton}>
+            <Ionicons name="search" size={24} color={COLORS.text.primary} />
+          </TouchableOpacity>
+          
+          {/* Add Reset button for testing */}
+          <TouchableOpacity 
+            onPress={() => {
+              resetAllCheckInsAndCounts();
+              Alert.alert('Reset', 'All check-ins and surfer counts have been reset');
+              onRefresh();
+            }} 
+            style={[styles.iconButton, { backgroundColor: COLORS.error }]}
+          >
+            <Ionicons name="refresh" size={20} color={COLORS.white} />
+          </TouchableOpacity>
+        </View>
       </View>
 
       <View style={styles.section}>
@@ -249,6 +271,15 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: COLORS.text.secondary,
     marginTop: 4,
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  iconButton: {
+    padding: 8,
+    borderRadius: 8,
   },
 });
 

@@ -70,10 +70,43 @@ let activeCheckIns: Record<string, CheckIn[]> = {
   'superiorentry': [],
 };
 
+// Clear all active check-ins and reset surfer counts
+export const resetAllCheckInsAndCounts = () => {
+  console.log("[DEBUG] Resetting all check-ins and surfer counts");
+  
+  // Reset all surfer counts to 0
+  Object.keys(activeSurferCounts).forEach(spotId => {
+    activeSurferCounts[spotId] = 0;
+    updateGlobalSurferCount(spotId, 0);
+  });
+  
+  // Clear all active check-ins
+  Object.keys(activeCheckIns).forEach(spotId => {
+    activeCheckIns[spotId] = [];
+  });
+  
+  // Broadcast updates via WebSocket
+  Object.keys(activeSurferCounts).forEach(spotId => {
+    webSocketService.send({
+      type: WebSocketMessageType.SURFER_COUNT_UPDATE,
+      payload: {
+        spotId,
+        count: 0,
+        lastUpdated: new Date().toISOString()
+      }
+    });
+  });
+  
+  console.log("[DEBUG] Reset complete");
+};
+
 // Initialize the global state with our initial data
 Object.keys(activeSurferCounts).forEach(spotId => {
   updateGlobalSurferCount(spotId, activeSurferCounts[spotId]);
 });
+
+// Reset everything on app initialization
+resetAllCheckInsAndCounts();
 
 // Function to update a spot's surfer count and emit the event
 const updateSurferCount = (spotId: string, count: number) => {
