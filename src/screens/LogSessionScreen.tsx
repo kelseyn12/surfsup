@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   StyleSheet, 
   View, 
@@ -117,15 +117,30 @@ const LogSessionScreen: React.FC = () => {
     setQuality(quality);
   };
 
-  const handleSaveSession = async () => {
-    // Validate required fields
-    if (!spotId) {
-      Alert.alert('Error', 'No spot selected.');
-      return;
+  // Handle navigation back
+  const handleBack = useCallback(() => {
+    console.log('Back button pressed, navigating back');
+    navigation.goBack();
+  }, [navigation]);
+
+  // Handle save validation
+  const validateSessionData = useCallback(() => {
+    if (!spot) {
+      Alert.alert('Error', 'Please select a surf spot.');
+      return false;
     }
 
     if (startTime >= endTime) {
       Alert.alert('Error', 'End time must be after start time.');
+      return false;
+    }
+
+    return true;
+  }, [spot, startTime, endTime]);
+
+  const handleSaveSession = async () => {
+    // Validate required fields
+    if (!validateSessionData()) {
       return;
     }
 
@@ -137,7 +152,7 @@ const LogSessionScreen: React.FC = () => {
 
       const sessionData: Omit<SurfSession, 'id' | 'createdAt' | 'updatedAt'> = {
         userId: 'test-user-id', // In a real app, get this from auth
-        spotId,
+        spotId: spot?.id || '', // Use the selected spot ID
         startTime: startTime.toISOString(),
         endTime: endTime.toISOString(),
         duration: durationMinutes,
@@ -210,7 +225,11 @@ const LogSessionScreen: React.FC = () => {
     >
       <ScrollView style={styles.container}>
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+          <TouchableOpacity 
+            onPress={handleBack} 
+            style={styles.backButton} 
+            activeOpacity={0.7}
+          >
             <Ionicons name="arrow-back" size={24} color={COLORS.text.primary} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Log Surf Session</Text>
@@ -460,7 +479,7 @@ const LogSessionScreen: React.FC = () => {
         <View style={styles.buttonContainer}>
           <TouchableOpacity 
             style={[styles.button, styles.cancelButton]} 
-            onPress={() => navigation.goBack()}
+            onPress={handleBack}
           >
             <Text style={styles.cancelButtonText}>Cancel</Text>
           </TouchableOpacity>
