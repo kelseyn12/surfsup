@@ -174,8 +174,27 @@ const SpotDetailsScreen: React.FC = () => {
             const newCount = await getSurferCount(spotId);
             setSurferCount(newCount);
             
-            // Force refresh the UI
-            Alert.alert('Success', 'You have checked out from this spot!');
+            // Ask user if they want to log the session
+            Alert.alert(
+              'Checked Out Successfully',
+              'Would you like to log details about your surf session?',
+              [
+                {
+                  text: 'Not Now',
+                  style: 'cancel'
+                },
+                {
+                  text: 'Log Session',
+                  onPress: () => {
+                    // Navigate to the log session screen
+                    navigation.navigate('LogSession', {
+                      spotId,
+                      checkInTime: undefined // We don't know when they checked in
+                    });
+                  }
+                }
+              ]
+            );
           } else {
             Alert.alert('Error', 'Failed to check out. Please try again.');
           }

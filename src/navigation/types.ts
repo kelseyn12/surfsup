@@ -9,6 +9,7 @@ export type RootStackParamList = {
   SpotDetails: { spotId: string; spot?: SurfSpot };
   CheckIn: { spotId: string; spot?: SurfSpot };
   SessionLog: { spotId: string; spot?: SurfSpot };
+  LogSession: { spotId: string; checkInTime?: string };
   SessionDetails: { sessionId: string };
   Settings: undefined;
   Auth: undefined;

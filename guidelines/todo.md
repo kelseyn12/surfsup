@@ -153,11 +153,19 @@ Real-Time Surfer Count Feature
 Real-Time WebSocket Architecture
   X Create mock WebSocket service for real-time updates.
   □ Connect WebSocket service to API endpoints for check-ins/outs.
-  □ Update components to subscribe to WebSocket events instead of polling.
+  X Update components to subscribe to WebSocket events instead of polling.
   □ Add connection status indicator and reconnection logic.
   □ Implement message queuing for offline/reconnection scenarios.
   □ Add server-side WebSocket implementation (future).
   □ Implement scaling solution for thousands of concurrent connections (future).
+
+Session Logging
+  X Create interface for logging surf sessions after check-out.
+  X Implement session details form with board type, conditions, etc.
+  X Connect session logging to API service.
+  □ Add photo upload capability for session logs.
+  □ Create session history view.
+  □ Implement stats and analytics based on session history.
 
 Frontend Screens
   X Home Screen - Implement surf conditions view.
@@ -165,7 +173,7 @@ Frontend Screens
   □ Favorites Screen - Implement favorite spots list.
   □ Profile Screen - Implement user profile.
   X Detail Screens - Implement spot details and sessions.
-  □ Check-in & Log Screens - Implement session logging.
+  X Check-in & Log Screens - Implement session logging.
 
 Authentication & User Management
   □ Build authentication screens.
