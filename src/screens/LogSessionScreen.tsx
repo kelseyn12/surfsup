@@ -21,6 +21,7 @@ import { COLORS } from '../constants';
 import { SurfSession, SurfSpot } from '../types';
 import { logSurfSession, fetchNearbySurfSpots } from '../services/api';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { HeaderBar } from '../components';
 
 const LogSessionScreen: React.FC = () => {
   const route = useRoute<RootStackScreenProps<'LogSession'>['route']>();
@@ -224,25 +225,13 @@ const LogSessionScreen: React.FC = () => {
       style={{ flex: 1 }}
     >
       <ScrollView style={styles.container}>
-        <View style={styles.header}>
-          <TouchableOpacity 
-            onPress={() => {
-              console.log('Back button directly using navigation.goBack()');
-              // Try different navigation methods
-              try {
-                navigation.goBack();
-              } catch (error) {
-                console.error('Navigation error:', error);
-                // Fallback to Main if goBack fails
-                navigation.navigate('Main');
-              }
-            }} 
-            style={styles.backButtonEnhanced}
-          >
-            <Ionicons name="arrow-back" size={28} color={COLORS.primary} />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Log Surf Session</Text>
-        </View>
+        <HeaderBar 
+          title="Log Surf Session" 
+          onBackPress={() => {
+            console.log('Back button pressed in LogSessionScreen');
+            navigation.goBack();
+          }}
+        />
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Spot</Text>

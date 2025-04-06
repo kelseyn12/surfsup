@@ -27,6 +27,7 @@ import {
 import { eventEmitter, AppEvents } from '../services/events';
 import { isUserCheckedInAt, getGlobalSurferCount } from '../services/globalState';
 import webSocketService, { WebSocketMessageType } from '../services/websocket';
+import { HeaderBar } from '../components';
 
 const SpotDetailsScreen: React.FC = () => {
   const route = useRoute<RootStackScreenProps<'SpotDetails'>['route']>();
@@ -348,164 +349,180 @@ const SpotDetailsScreen: React.FC = () => {
   }
 
   return (
-    <ScrollView style={styles.container}>
-      {/* Hero image */}
-      <View style={styles.imageContainer}>
-        <Image 
-          source={{ uri: spot?.imageUrls?.[0] || 'https://via.placeholder.com/800x400' }} 
-          style={styles.spotImage} 
-        />
-        <View style={styles.imageOverlay}>
-          <TouchableOpacity 
-            style={styles.favoriteButton}
-            onPress={toggleFavorite}
-          >
-            <Ionicons 
-              name={isFavorite ? 'heart' : 'heart-outline'} 
-              size={28} 
-              color={isFavorite ? COLORS.error : COLORS.white} 
+    <View style={styles.container}>
+      <HeaderBar 
+        title={spot?.name || 'Spot Details'} 
+        onBackPress={() => navigation.goBack()}
+        rightComponent={
+          <TouchableOpacity onPress={toggleFavorite} style={styles.favoriteButton}>
+            <Ionicons
+              name={isFavorite ? 'heart' : 'heart-outline'}
+              size={28}
+              color={isFavorite ? COLORS.error : COLORS.primary}
             />
           </TouchableOpacity>
-        </View>
-      </View>
-
-      {/* Spot header with surfer count */}
-      <View style={styles.spotHeader}>
-        <View style={styles.spotTitleContainer}>
-          <Text style={styles.spotName}>{spot?.name}</Text>
-          <Text style={styles.spotLocation}>
-            {[spot?.location?.city, spot?.location?.state].filter(Boolean).join(', ')}
-          </Text>
-        </View>
-
-        <View style={styles.surferCountContainer}>
-          <View style={[styles.surferCountBadge, { backgroundColor: getSurferCountColor(surferCount) }]}>
-            <Text style={styles.surferCountNumber}>{surferCount}</Text>
-            <Ionicons name="people" size={14} color={COLORS.white} />
+        }
+      />
+      
+      <ScrollView style={styles.scrollContent}>
+        {/* Hero image */}
+        <View style={styles.imageContainer}>
+          <Image 
+            source={{ uri: spot?.imageUrls?.[0] || 'https://via.placeholder.com/800x400' }} 
+            style={styles.spotImage} 
+          />
+          <View style={styles.imageOverlay}>
+            <TouchableOpacity 
+              style={styles.favoriteButton}
+              onPress={toggleFavorite}
+            >
+              <Ionicons 
+                name={isFavorite ? 'heart' : 'heart-outline'} 
+                size={28} 
+                color={isFavorite ? COLORS.error : COLORS.white} 
+              />
+            </TouchableOpacity>
           </View>
-          <Text style={styles.surferCountLabel}>{getSurferActivityLabel(surferCount)}</Text>
         </View>
-      </View>
 
-      {/* Current conditions */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Current Conditions</Text>
-        {currentConditions ? (
-          <View style={styles.conditionsCard}>
-            <View style={styles.conditionRow}>
-              <View style={styles.conditionItem}>
-                <Ionicons name="water-outline" size={24} color={COLORS.primary} />
-                <Text style={styles.conditionLabel}>Wave Height</Text>
-                <Text style={styles.conditionValue}>
-                  {currentConditions.waveHeight.min}-{currentConditions.waveHeight.max} {currentConditions.waveHeight.unit}
+        {/* Spot header with surfer count */}
+        <View style={styles.spotHeader}>
+          <View style={styles.spotTitleContainer}>
+            <Text style={styles.spotName}>{spot?.name}</Text>
+            <Text style={styles.spotLocation}>
+              {[spot?.location?.city, spot?.location?.state].filter(Boolean).join(', ')}
+            </Text>
+          </View>
+
+          <View style={styles.surferCountContainer}>
+            <View style={[styles.surferCountBadge, { backgroundColor: getSurferCountColor(surferCount) }]}>
+              <Text style={styles.surferCountNumber}>{surferCount}</Text>
+              <Ionicons name="people" size={14} color={COLORS.white} />
+            </View>
+            <Text style={styles.surferCountLabel}>{getSurferActivityLabel(surferCount)}</Text>
+          </View>
+        </View>
+
+        {/* Current conditions */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Current Conditions</Text>
+          {currentConditions ? (
+            <View style={styles.conditionsCard}>
+              <View style={styles.conditionRow}>
+                <View style={styles.conditionItem}>
+                  <Ionicons name="water-outline" size={24} color={COLORS.primary} />
+                  <Text style={styles.conditionLabel}>Wave Height</Text>
+                  <Text style={styles.conditionValue}>
+                    {currentConditions.waveHeight.min}-{currentConditions.waveHeight.max} {currentConditions.waveHeight.unit}
+                  </Text>
+                </View>
+                <View style={styles.conditionItem}>
+                  <Ionicons name="time-outline" size={24} color={COLORS.primary} />
+                  <Text style={styles.conditionLabel}>Period</Text>
+                  <Text style={styles.conditionValue}>{currentConditions.swell[0]?.period || 0}s</Text>
+                </View>
+              </View>
+              <View style={styles.conditionRow}>
+                <View style={styles.conditionItem}>
+                  <Ionicons name="speedometer-outline" size={24} color={COLORS.primary} />
+                  <Text style={styles.conditionLabel}>Wind</Text>
+                  <Text style={styles.conditionValue}>
+                    {currentConditions.wind.speed}{currentConditions.wind.unit === 'mph' ? 'mph' : 'kn'} {currentConditions.wind.direction}
+                  </Text>
+                </View>
+                <View style={styles.conditionItem}>
+                  <Ionicons name="thermometer-outline" size={24} color={COLORS.primary} />
+                  <Text style={styles.conditionLabel}>Water Temp</Text>
+                  <Text style={styles.conditionValue}>
+                    {currentConditions.weather.temperature}°{currentConditions.weather.unit}
+                  </Text>
+                </View>
+              </View>
+              <View style={styles.ratingContainer}>
+                <Text style={styles.ratingLabel}>Overall Rating:</Text>
+                <Text style={[styles.ratingValue, { color: getRatingColor(currentConditions.rating) }]}>
+                  {currentConditions.rating}/10
                 </Text>
               </View>
-              <View style={styles.conditionItem}>
-                <Ionicons name="time-outline" size={24} color={COLORS.primary} />
-                <Text style={styles.conditionLabel}>Period</Text>
-                <Text style={styles.conditionValue}>{currentConditions.swell[0]?.period || 0}s</Text>
-              </View>
             </View>
-            <View style={styles.conditionRow}>
-              <View style={styles.conditionItem}>
-                <Ionicons name="speedometer-outline" size={24} color={COLORS.primary} />
-                <Text style={styles.conditionLabel}>Wind</Text>
-                <Text style={styles.conditionValue}>
-                  {currentConditions.wind.speed}{currentConditions.wind.unit === 'mph' ? 'mph' : 'kn'} {currentConditions.wind.direction}
-                </Text>
-              </View>
-              <View style={styles.conditionItem}>
-                <Ionicons name="thermometer-outline" size={24} color={COLORS.primary} />
-                <Text style={styles.conditionLabel}>Water Temp</Text>
-                <Text style={styles.conditionValue}>
-                  {currentConditions.weather.temperature}°{currentConditions.weather.unit}
-                </Text>
-              </View>
+          ) : (
+            <View style={styles.noDataContainer}>
+              <Text style={styles.noDataText}>No current conditions available</Text>
             </View>
-            <View style={styles.ratingContainer}>
-              <Text style={styles.ratingLabel}>Overall Rating:</Text>
-              <Text style={[styles.ratingValue, { color: getRatingColor(currentConditions.rating) }]}>
-                {currentConditions.rating}/10
-              </Text>
-            </View>
-          </View>
-        ) : (
-          <View style={styles.noDataContainer}>
-            <Text style={styles.noDataText}>No current conditions available</Text>
-          </View>
-        )}
-      </View>
+          )}
+        </View>
 
-      {/* Forecast */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Forecast</Text>
-        {formattedForecast.length > 0 ? (
-          <ScrollView 
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.forecastContainer}
+        {/* Forecast */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Forecast</Text>
+          {formattedForecast.length > 0 ? (
+            <ScrollView 
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.forecastContainer}
+            >
+              {formattedForecast.map((day, index) => (
+                <View key={index} style={styles.forecastCard}>
+                  <Text style={styles.forecastDay}>{day.day}</Text>
+                  <Text style={[styles.forecastRating, { color: getRatingColor(day.rating) }]}>
+                    {day.rating}/10
+                  </Text>
+                  <View style={styles.forecastDetail}>
+                    <Ionicons name="water-outline" size={16} color={COLORS.gray} />
+                    <Text style={styles.forecastDetailText}>{day.waveHeight}</Text>
+                  </View>
+                  <View style={styles.forecastDetail}>
+                    <Ionicons name="time-outline" size={16} color={COLORS.gray} />
+                    <Text style={styles.forecastDetailText}>{day.period}</Text>
+                  </View>
+                  <View style={styles.forecastDetail}>
+                    <Ionicons name="speedometer-outline" size={16} color={COLORS.gray} />
+                    <Text style={styles.forecastDetailText}>{day.wind}</Text>
+                  </View>
+                </View>
+              ))}
+            </ScrollView>
+          ) : (
+            <View style={styles.noDataContainer}>
+              <Text style={styles.noDataText}>No forecast data available</Text>
+            </View>
+          )}
+        </View>
+
+        {/* Additional info */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>About This Spot</Text>
+          <View style={styles.infoCard}>
+            <Text style={styles.infoText}>
+              {spot?.description || `${spot?.name} is a popular Lake Superior surf spot known for consistent waves during north and northeast winds. 
+              It works best during fall and winter months when winds are strongest.
+              Water temperatures can be very cold, ranging from 32-55°F depending on the season, so a thick wetsuit, boots, gloves, and hood are essential.`}
+            </Text>
+          </View>
+        </View>
+
+        {/* Action buttons */}
+        <View style={styles.actions}>
+          <TouchableOpacity 
+            style={[styles.actionButton, isCheckedIn && styles.checkOutButton]}
+            onPress={handleCheckIn}
+            disabled={isLoading}
           >
-            {formattedForecast.map((day, index) => (
-              <View key={index} style={styles.forecastCard}>
-                <Text style={styles.forecastDay}>{day.day}</Text>
-                <Text style={[styles.forecastRating, { color: getRatingColor(day.rating) }]}>
-                  {day.rating}/10
-                </Text>
-                <View style={styles.forecastDetail}>
-                  <Ionicons name="water-outline" size={16} color={COLORS.gray} />
-                  <Text style={styles.forecastDetailText}>{day.waveHeight}</Text>
-                </View>
-                <View style={styles.forecastDetail}>
-                  <Ionicons name="time-outline" size={16} color={COLORS.gray} />
-                  <Text style={styles.forecastDetailText}>{day.period}</Text>
-                </View>
-                <View style={styles.forecastDetail}>
-                  <Ionicons name="speedometer-outline" size={16} color={COLORS.gray} />
-                  <Text style={styles.forecastDetailText}>{day.wind}</Text>
-                </View>
-              </View>
-            ))}
-          </ScrollView>
-        ) : (
-          <View style={styles.noDataContainer}>
-            <Text style={styles.noDataText}>No forecast data available</Text>
-          </View>
-        )}
-      </View>
-
-      {/* Additional info */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>About This Spot</Text>
-        <View style={styles.infoCard}>
-          <Text style={styles.infoText}>
-            {spot?.description || `${spot?.name} is a popular Lake Superior surf spot known for consistent waves during north and northeast winds. 
-            It works best during fall and winter months when winds are strongest.
-            Water temperatures can be very cold, ranging from 32-55°F depending on the season, so a thick wetsuit, boots, gloves, and hood are essential.`}
-          </Text>
+            <Ionicons name={isCheckedIn ? "log-out-outline" : "location-outline"} size={20} color={COLORS.white} />
+            <Text style={styles.actionButtonText}>
+              {isLoading ? 'Processing...' : isCheckedIn ? 'Check Out' : 'Check In'}
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={[styles.actionButton, styles.secondaryButton]}
+            onPress={() => navigation.navigate('SessionLog', { spotId, spot })}
+          >
+            <Ionicons name="add-circle-outline" size={20} color={COLORS.primary} />
+            <Text style={[styles.actionButtonText, styles.secondaryButtonText]}>Log Session</Text>
+          </TouchableOpacity>
         </View>
-      </View>
-
-      {/* Action buttons */}
-      <View style={styles.actions}>
-        <TouchableOpacity 
-          style={[styles.actionButton, isCheckedIn && styles.checkOutButton]}
-          onPress={handleCheckIn}
-          disabled={isLoading}
-        >
-          <Ionicons name={isCheckedIn ? "log-out-outline" : "location-outline"} size={20} color={COLORS.white} />
-          <Text style={styles.actionButtonText}>
-            {isLoading ? 'Processing...' : isCheckedIn ? 'Check Out' : 'Check In'}
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity 
-          style={[styles.actionButton, styles.secondaryButton]}
-          onPress={() => navigation.navigate('SessionLog', { spotId, spot })}
-        >
-          <Ionicons name="add-circle-outline" size={20} color={COLORS.primary} />
-          <Text style={[styles.actionButtonText, styles.secondaryButtonText]}>Log Session</Text>
-        </TouchableOpacity>
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 };
 
@@ -513,6 +530,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.background,
+  },
+  scrollContent: {
+    flex: 1,
   },
   loadingContainer: {
     flex: 1,
