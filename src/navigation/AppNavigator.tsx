@@ -96,8 +96,8 @@ const AppNavigator = () => {
           component={SettingsScreen}
           options={{ 
             headerShown: false,
-            presentation: 'card',
-            animation: 'slide_from_right'
+            presentation: 'modal',
+            animation: 'slide_from_bottom'
           }} 
         />
       </Stack.Navigator>

@@ -8,13 +8,19 @@ import {
   Switch,
   Alert
 } from 'react-native';
-import { useNavigation, CommonActions } from '@react-navigation/native';
+import { 
+  useNavigation, 
+  CommonActions, 
+  ParamListBase,
+  StackActions
+} from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
-import { RootStackScreenProps } from '../navigation/types';
 import { COLORS } from '../constants';
 
 const SettingsScreen: React.FC = () => {
-  const navigation = useNavigation();
+  // Use the basic NativeStackNavigationProp for better compatibility
+  const navigation = useNavigation<NativeStackNavigationProp<ParamListBase>>();
   
   // Mock settings state
   const [notificationsEnabled, setNotificationsEnabled] = React.useState(true);
@@ -58,11 +64,10 @@ const SettingsScreen: React.FC = () => {
           style: "destructive",
           onPress: () => {
             Alert.alert("Logged Out", "You have been logged out successfully.");
-            navigation.dispatch(
-              CommonActions.navigate({
-                name: 'Main'
-              })
-            );
+            navigation.reset({
+              index: 0,
+              routes: [{ name: 'Main' }],
+            });
           }
         }
       ]
@@ -77,27 +82,32 @@ const SettingsScreen: React.FC = () => {
     };
   }, []);
 
+  // Simple back handler that tries multiple methods
   const handleBackPress = () => {
-    console.log('Back button pressed in Settings with dispatch');
-    // Try multiple navigation approaches for better compatibility
+    console.log('Back button pressed in Settings - attempting navigation');
+    
+    // First try pop
     try {
-      navigation.dispatch(CommonActions.goBack());
-    } catch (error) {
-      console.log('Error with CommonActions.goBack():', error);
-      try {
-        // Fallback to navigate to Profile
-        navigation.dispatch(
-          CommonActions.navigate({
-            name: 'Main',
-            params: {
-              screen: 'Profile'
-            }
-          })
-        );
-      } catch (innerError) {
-        console.log('Error with fallback navigation:', innerError);
-        Alert.alert('Navigation Error', 'Unable to go back. Please try again.');
-      }
+      navigation.pop();
+      return;
+    } catch (e) {
+      console.log('Pop failed:', e);
+    }
+
+    // Then try goBack
+    try {
+      navigation.goBack();
+      return;
+    } catch (e) {
+      console.log('GoBack failed:', e);
+    }
+
+    // Finally, navigate explicitly to Main/Profile
+    try {
+      navigation.navigate('Main', { screen: 'Profile' });
+    } catch (e) {
+      console.log('Navigate failed:', e);
+      Alert.alert('Navigation Error', 'Could not return to previous screen.');
     }
   };
 
@@ -107,6 +117,7 @@ const SettingsScreen: React.FC = () => {
         <TouchableOpacity 
           onPress={handleBackPress}
           style={styles.backButton}
+          testID="settingsBackButton"
         >
           <Ionicons name="arrow-back" size={28} color={COLORS.primary} />
         </TouchableOpacity>
