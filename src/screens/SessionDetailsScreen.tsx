@@ -86,11 +86,7 @@ const SessionDetailsScreen: React.FC = () => {
     <View style={styles.container}>
       <HeaderBar
         title="Session Details"
-        leftComponent={
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={24} color={COLORS.text} />
-          </TouchableOpacity>
-        }
+        onBackPress={() => navigation.goBack()}
         rightComponent={
           <TouchableOpacity onPress={handleDeleteSession} style={styles.deleteButton}>
             <Ionicons name="trash-outline" size={24} color={COLORS.error} />

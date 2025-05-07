@@ -92,8 +92,7 @@ const SettingsScreen: React.FC = () => {
     <ScrollView style={styles.container}>
       <HeaderBar 
         title="Settings" 
-        showBackButton
-        onBack={handleBack}
+        onBackPress={handleBack}
       />
 
       <View style={styles.section}>
