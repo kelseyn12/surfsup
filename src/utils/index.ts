@@ -94,7 +94,7 @@ export const isNullOrUndefined = (value: any): boolean => {
  * @returns Boolean indicating if in development
  */
 export const isDevelopment = (): boolean => {
-  return process.env.NODE_ENV === 'development';
+  return __DEV__;
 };
 
 /**

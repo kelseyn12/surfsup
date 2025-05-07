@@ -35,7 +35,7 @@ axiosInstance.interceptors.request.use(
     }
 
     // Log request details in development
-    if (process.env.NODE_ENV === 'development') {
+    if (__DEV__) {
       console.log(`[API Request] ${config.method?.toUpperCase()} ${config.url}`, config.data);
     }
 
@@ -51,7 +51,7 @@ axiosInstance.interceptors.request.use(
 axiosInstance.interceptors.response.use(
   (response) => {
     // Log response in development
-    if (process.env.NODE_ENV === 'development') {
+    if (__DEV__) {
       console.log(`[API Response] ${response.config.method?.toUpperCase()} ${response.config.url}`, response.data);
     }
     return response;
