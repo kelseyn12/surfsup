@@ -70,6 +70,8 @@ This document maintains a running list of tasks, enhancements, bug fixes, and te
 - [ ] Implement light/dark mode
 - [ ] Add animations and transitions
 - [ ] Implement pull-to-refresh functionality
+- [X] Add WebSocket connection status indicators in UI
+  - X Subtle status dot added to HeaderBar, powered by a global context for real-time connection state.
 
 ## Data Management
 
@@ -117,7 +119,6 @@ This document maintains a running list of tasks, enhancements, bug fixes, and te
   - Tested across all platforms
 
 ## Current Tasks
-- [ ] Add WebSocket connection status indicators in UI
 - [ ] Implement comprehensive error handling for WebSocket
 - [ ] Add reconnection strategies
 - [ ] Consider production WebSocket server implementation

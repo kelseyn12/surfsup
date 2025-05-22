@@ -38,6 +38,11 @@ export interface ConnectionStatusMessage {
   error?: string;
 }
 
+export type WebSocketStatus = {
+  connected: boolean;
+  error?: string | null;
+};
+
 // Subscribers will receive messages based on the type they're interested in
 type MessageCallback<T = unknown> = (message: WebSocketMessage<T>) => void;
 
