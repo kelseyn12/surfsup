@@ -146,7 +146,7 @@ const ProfileScreen: React.FC = () => {
             <Text style={styles.emptyStateText}>No sessions logged yet</Text>
             <TouchableOpacity 
               style={styles.emptyStateButton}
-              onPress={() => navigation.navigate('LogSession', { spotId: undefined })}
+              onPress={() => navigation.navigate('LogSession', { spotId: '' })}
             >
               <Text style={styles.emptyStateButtonText}>Log Your First Session</Text>
             </TouchableOpacity>
@@ -157,7 +157,7 @@ const ProfileScreen: React.FC = () => {
       <View style={styles.actions}>
         <TouchableOpacity 
           style={styles.actionButton}
-          onPress={() => navigation.navigate('LogSession', { spotId: undefined })}
+          onPress={() => navigation.navigate('LogSession', { spotId: '' })}
         >
           <Ionicons name="add-circle-outline" size={20} color={COLORS.white} />
           <Text style={styles.actionButtonText}>Log Session</Text>

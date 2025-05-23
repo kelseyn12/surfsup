@@ -22,10 +22,10 @@ export const COLORS = {
     light: '#F8F9FA', // Light Gray
   },
   surfConditions: {
-    poor: '#DC3545', // Red
-    fair: '#FFC107', // Yellow
-    good: '#28A745', // Green
-    excellent: '#17A2B8', // Teal
+    surfPoor: '#DC3545', // Red
+    surfFair: '#FFC107', // Yellow
+    surfGood: '#28A745', // Green
+    surfExcellent: '#17A2B8', // Teal
   },
   transparent: 'transparent',
 };
