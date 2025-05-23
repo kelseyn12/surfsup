@@ -115,8 +115,14 @@ class WebSocketService {
     // Notify subscribers
     this.broadcastMessage({
       type: WebSocketMessageType.CONNECTION_STATUS,
-      payload: { connected: false }
+      payload: { connected: false, error: 'Disconnected from server' }
     });
+  }
+
+  // Manually trigger an error (for testing UI)
+  public triggerError(message: string = 'Simulated connection error'): void {
+    console.error('[WebSocket] Manual error:', message);
+    this.handleConnectionError(new Error(message));
   }
 
   // Handle connection errors and attempt reconnection

@@ -119,7 +119,8 @@ This document maintains a running list of tasks, enhancements, bug fixes, and te
   - Tested across all platforms
 
 ## Current Tasks
-- [ ] Implement comprehensive error handling for WebSocket
+- [P] Implement comprehensive error handling for WebSocket
+  - Persistent error banner now appears in the UI if the WebSocket connection is lost or unstable.
 - [ ] Add reconnection strategies
 - [ ] Consider production WebSocket server implementation
 

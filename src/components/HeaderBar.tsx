@@ -32,25 +32,34 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
   else if (!connected) statusColor = COLORS.warning;
 
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor={COLORS.white} />
-      <View style={styles.header}>
-        {onBackPress ? (
-          <BackButton onPress={onBackPress} />
-        ) : (
-          <View style={styles.placeholderButton} />
-        )}
-        <View style={styles.titleContainer}>
-          <Text style={styles.title} numberOfLines={1}>
-            {title}
-          </Text>
-          <View style={[styles.statusDot, { backgroundColor: statusColor }]} />
-        </View>
-        <View style={styles.rightComponentContainer}>
-          {rightComponent || <View style={styles.placeholderButton} />}
+    <>
+      <View style={styles.container}>
+        <StatusBar barStyle="dark-content" backgroundColor={COLORS.white} />
+        <View style={styles.header}>
+          {onBackPress ? (
+            <BackButton onPress={onBackPress} />
+          ) : (
+            <View style={styles.placeholderButton} />
+          )}
+          <View style={styles.titleContainer}>
+            <Text style={styles.title} numberOfLines={1}>
+              {title}
+            </Text>
+            <View style={[styles.statusDot, { backgroundColor: statusColor }]} />
+          </View>
+          <View style={styles.rightComponentContainer}>
+            {rightComponent || <View style={styles.placeholderButton} />}
+          </View>
         </View>
       </View>
-    </View>
+      {error && (
+        <View style={styles.errorBanner}>
+          <Text style={styles.errorBannerText}>
+            Real-time connection lost. Some features may be unavailable. Retrying...
+          </Text>
+        </View>
+      )}
+    </>
   );
 };
 
@@ -97,6 +106,17 @@ const styles = StyleSheet.create({
     height: 44,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  errorBanner: {
+    backgroundColor: COLORS.error,
+    paddingVertical: 6,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+  },
+  errorBannerText: {
+    color: COLORS.white,
+    fontSize: 13,
+    textAlign: 'center',
   },
 });
 
