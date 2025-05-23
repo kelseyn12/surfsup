@@ -53,11 +53,20 @@ class WebSocketService {
   private mockUpdateInterval: NodeJS.Timeout | null = null;
   private reconnectAttempts: number = 0;
   private readonly MAX_RECONNECT_ATTEMPTS = 5;
-  private readonly RECONNECT_DELAY = 5000; // 5 seconds
+  private reconnectDelay: number = 2000; // Start with 2 seconds
+  private readonly MAX_RECONNECT_DELAY = 30000; // Max 30 seconds
 
   // Public getter for connection status
   get isConnected(): boolean {
     return this._isConnected;
+  }
+
+  get currentReconnectAttempt(): number {
+    return this.reconnectAttempts;
+  }
+
+  get currentReconnectDelay(): number {
+    return this.reconnectDelay;
   }
 
   // Connect to the WebSocket server
@@ -78,6 +87,7 @@ class WebSocketService {
 
         this._isConnected = true;
         this.reconnectAttempts = 0;
+        this.reconnectDelay = 2000; // Reset delay on success
         console.log('[WebSocket] Connected');
         
         // Notify subscribers of the connection
@@ -119,12 +129,6 @@ class WebSocketService {
     });
   }
 
-  // Manually trigger an error (for testing UI)
-  public triggerError(message: string = 'Simulated connection error'): void {
-    console.error('[WebSocket] Manual error:', message);
-    this.handleConnectionError(new Error(message));
-  }
-
   // Handle connection errors and attempt reconnection
   private handleConnectionError(error: Error): void {
     this._isConnected = false;
@@ -138,13 +142,24 @@ class WebSocketService {
     // Attempt to reconnect if we haven't exceeded max attempts
     if (this.reconnectAttempts < this.MAX_RECONNECT_ATTEMPTS) {
       this.reconnectAttempts++;
-      console.log(`[WebSocket] Attempting to reconnect (${this.reconnectAttempts}/${this.MAX_RECONNECT_ATTEMPTS})...`);
-      
+      console.log(`[WebSocket] Attempting to reconnect (${this.reconnectAttempts}/${this.MAX_RECONNECT_ATTEMPTS}) in ${this.reconnectDelay / 1000}s...`);
+      // Broadcast status for UI feedback
+      this.broadcastMessage({
+        type: WebSocketMessageType.CONNECTION_STATUS,
+        payload: {
+          connected: false,
+          error: `Attempting to reconnect (${this.reconnectAttempts}/${this.MAX_RECONNECT_ATTEMPTS})`,
+          reconnectAttempt: this.reconnectAttempts,
+          reconnectDelay: this.reconnectDelay,
+        } as any // extra fields for context, ignored by other consumers
+      });
       this.reconnectInterval = setTimeout(() => {
         this.connect().catch(() => {
           // Reconnection failed, will be handled by handleConnectionError
         });
-      }, this.RECONNECT_DELAY);
+      }, this.reconnectDelay);
+      // Exponential backoff: double the delay, up to max
+      this.reconnectDelay = Math.min(this.reconnectDelay * 2, this.MAX_RECONNECT_DELAY);
     } else {
       console.error('[WebSocket] Max reconnection attempts reached');
     }
@@ -201,64 +216,12 @@ class WebSocketService {
     if (this.mockUpdateInterval) {
       clearInterval(this.mockUpdateInterval);
     }
-    
-    // Disable automatic mock updates - they're confusing the user experience
-    // Keeping the code but commenting it out for future reference
-    /*
-    // Simulate random updates every 10-30 seconds
-    this.mockUpdateInterval = setInterval(() => {
-      if (!this._isConnected) return;
-      
-      // 20% chance of a random update
-      if (Math.random() > 0.8) {
-        this.simulateRandomUpdate();
-      }
-    }, 15000);
-    */
-    
-    console.log('[WebSocket] Automatic mock updates are disabled');
+    // Production: no mock updates
   }
 
   // Simulate a random update
   private simulateRandomUpdate(): void {
-    const spotIds = Object.keys(globalSurferCounts);
-    if (spotIds.length === 0) return;
-    
-    const randomSpotId = spotIds[Math.floor(Math.random() * spotIds.length)];
-    
-    // 60% chance of increase, 40% chance of decrease
-    const isIncrease = Math.random() > 0.4;
-    
-    // Get current count
-    const currentCount = globalSurferCounts[randomSpotId] || 0;
-    
-    // Calculate new count (never go below 0)
-    const newCount = isIncrease 
-      ? currentCount + 1 
-      : Math.max(0, currentCount - 1);
-    
-    if (currentCount === newCount) return; // No change
-    
-    // Create an update message
-    const updateMessage: SurferCountUpdateMessage = {
-      spotId: randomSpotId,
-      count: newCount,
-      lastUpdated: new Date().toISOString()
-    };
-    
-    console.log(`[WebSocket] Simulating ${isIncrease ? 'increase' : 'decrease'} for ${randomSpotId}: ${currentCount} -> ${newCount}`);
-    
-    // Broadcast the message
-    this.broadcastMessage({
-      type: WebSocketMessageType.SURFER_COUNT_UPDATE,
-      payload: updateMessage
-    });
-    
-    // Update the global state
-    updateGlobalSurferCount(randomSpotId, newCount);
-    
-    // Emit event for components that are still using the event system
-    emitSurferCountUpdated(randomSpotId, newCount);
+    // Removed for production
   }
 
   // Handle a surfer count update message

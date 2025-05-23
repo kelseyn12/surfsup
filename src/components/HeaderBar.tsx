@@ -18,6 +18,8 @@ interface HeaderBarProps {
   rightComponent?: React.ReactNode;
 }
 
+const MAX_RECONNECT_ATTEMPTS = 5;
+
 /**
  * A standardized header component for screens with optional back button
  */
@@ -26,10 +28,17 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
   onBackPress, 
   rightComponent 
 }) => {
-  const { connected, error } = useWebSocketStatus();
+  const { connected, error, reconnectAttempt, reconnectDelay, reconnectCountdown } = useWebSocketStatus();
   let statusColor = COLORS.success;
   if (error) statusColor = COLORS.error;
   else if (!connected) statusColor = COLORS.warning;
+
+  let errorMessage = 'Real-time connection lost. Some features may be unavailable.';
+  if (error && reconnectAttempt > 0 && reconnectAttempt < MAX_RECONNECT_ATTEMPTS) {
+    errorMessage += ` Retrying (attempt ${reconnectAttempt} of ${MAX_RECONNECT_ATTEMPTS}) in ${reconnectCountdown}s...`;
+  } else if (error && reconnectAttempt >= MAX_RECONNECT_ATTEMPTS) {
+    errorMessage = 'Unable to reconnect to real-time service. Please check your connection or reload the app.';
+  }
 
   return (
     <>
@@ -54,9 +63,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
       </View>
       {error && (
         <View style={styles.errorBanner}>
-          <Text style={styles.errorBannerText}>
-            Real-time connection lost. Some features may be unavailable. Retrying...
-          </Text>
+          <Text style={styles.errorBannerText}>{errorMessage}</Text>
         </View>
       )}
     </>
