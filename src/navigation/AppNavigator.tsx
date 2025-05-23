@@ -121,50 +121,16 @@ const AppNavigator = () => {
             options={{ headerShown: false }}
           />
         )}
-        {isAuthenticated ? (
-          // Authenticated routes
-          <>
-            <Stack.Screen 
-              name="Main" 
-              component={MainTabNavigator} 
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen 
-              name="SpotDetails" 
-              component={SpotDetailsScreen} 
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen 
-              name="LogSession" 
-              component={LogSessionScreen} 
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen 
-              name="SessionDetails" 
-              component={SessionDetailsScreen} 
-              options={{ 
-                headerShown: false,
-                animation: 'slide_from_right',
-                gestureEnabled: true,
-                gestureDirection: 'horizontal',
-                animationTypeForReplace: 'push',
-                presentation: 'card'
-              }}
-            />
-            <Stack.Screen 
-              name="Settings" 
-              component={SettingsScreen} 
-              options={{ headerShown: false }}
-            />
-          </>
-        ) : (
-          // Unauthenticated routes
-          <Stack.Screen 
-            name="Auth" 
-            component={AuthScreen} 
-            options={{ headerShown: false }}
-          />
+        {hasCompletedOnboarding && !isAuthenticated && (
+          <Stack.Screen name="Auth" component={AuthScreen} />
         )}
+        {hasCompletedOnboarding && isAuthenticated && (
+          <Stack.Screen name="Main" component={MainTabNavigator} />
+        )}
+        <Stack.Screen name="SpotDetails" component={SpotDetailsScreen} />
+        <Stack.Screen name="LogSession" component={LogSessionScreen} />
+        <Stack.Screen name="Settings" component={SettingsScreen} />
+        <Stack.Screen name="SessionDetails" component={SessionDetailsScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

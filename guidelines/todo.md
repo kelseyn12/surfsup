@@ -23,6 +23,7 @@ This document maintains a running list of tasks, enhancements, bug fixes, and te
 
 ### Authentication
 
+- [X] Using a fake auth context for Expo Go development. Replace with real Firebase Auth integration before production or when moving to a custom dev client.
 - [ ] Implement user registration screen
 - [ ] Implement login screen
 - [ ] Set up authentication flow
@@ -119,10 +120,12 @@ This document maintains a running list of tasks, enhancements, bug fixes, and te
   - Tested across all platforms
 
 ## Current Tasks
-- [P] Implement comprehensive error handling for WebSocket
-  - Persistent error banner now appears in the UI if the WebSocket connection is lost or unstable.
-- [ ] Add reconnection strategies
-- [ ] Consider production WebSocket server implementation
+- [X] Implement comprehensive error handling for WebSocket
+  - Persistent error banner and live countdown now appear in the UI if the WebSocket connection is lost or unstable.
+- [X] Add reconnection strategies
+  - Exponential backoff and live UI feedback implemented. All test/mock code removed; service is production-ready.
+- [H] Integrate with real backend WebSocket server
+  - Deferred until after Firebase authentication and user flows are complete. Will revisit real-time backend after core auth is in place.
 
 To-Do List: Building SurfSUP
 Phase 1: Planning
@@ -219,4 +222,7 @@ Goal: Iterate and scale beyond Lake Superior.
 □ Add push notifications.
 □ Implement social features.
 □ Add premium features.
-□ Expand to more locations. 
+□ Expand to more locations.
+
+- [ ] jsEngine was set back to Hermes in app.json after switching to mock authentication. Revisit this if real Firebase Auth is reintroduced or if native module compatibility issues arise.
+- [ ] Hermes was disabled in app.json (set jsEngine to 'jsc') to allow Firebase Auth to work in Expo Go. If you need Hermes or native Firebase features in the future, revisit this decision and consider migrating to a custom dev client or bare workflow. 

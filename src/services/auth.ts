@@ -128,11 +128,14 @@ export const useAuthStore = create<AuthState>()(
 
           set({ isLoading: true, error: null });
           
-          const response = await api.post('/auth/register', { email, password, name });
-          
-          // Initialize default user preferences
-          const user: User = {
-            ...response.data.user,
+          // Simulate registration
+          const mockUser: User = {
+            id: 'user-' + Date.now(),
+            email,
+            name,
+            username: email.split('@')[0].toLowerCase(),
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
             preferences: {
               favoriteSpots: [],
               units: 'imperial',
@@ -142,14 +145,14 @@ export const useAuthStore = create<AuthState>()(
             stats: {
               totalSessions: 0,
               averageSessionLength: 0,
-              startDate: response.data.user.createdAt
+              startDate: new Date().toISOString()
             }
           };
           
           set({
-            user,
-            token: response.data.token,
-            refreshToken: response.data.refreshToken,
+            user: mockUser,
+            token: 'mock-token-' + Date.now(),
+            refreshToken: 'mock-refresh-token-' + Date.now(),
             isAuthenticated: true,
             isLoading: false,
             lastActivity: Date.now(),
@@ -229,21 +232,8 @@ export const useAuthStore = create<AuthState>()(
       },
 
       refreshAuthToken: async () => {
-        try {
-          const { refreshToken } = get();
-          if (!refreshToken) throw new Error('No refresh token available');
-
-          const response = await api.post('/auth/refresh', { refreshToken });
-          
-          set({
-            token: response.data.token,
-            refreshToken: response.data.refreshToken,
-            lastActivity: Date.now(),
-          });
-        } catch (error) {
-          // If refresh fails, logout the user
-          get().logout();
-        }
+        // No-op in mock mode
+        set({ lastActivity: Date.now() });
       },
 
       clearError: () => set({ error: null }),

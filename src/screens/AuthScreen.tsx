@@ -17,50 +17,20 @@ import { useAuthStore } from '../services/auth';
 
 const AuthScreen: React.FC = () => {
   const navigation = useNavigation<RootStackScreenProps<'Auth'>['navigation']>();
-  const { login, register, isLoading, error, clearError } = useAuthStore();
+  const { login, isLoading, error, clearError } = useAuthStore();
   
-  const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [name, setName] = useState('');
-  const [validationError, setValidationError] = useState('');
+  const [localError, setLocalError] = useState('');
 
-  const validateForm = () => {
-    if (!email || !password) {
-      setValidationError('Please fill in all required fields');
-      return false;
-    }
-    if (!isLogin && !name) {
-      setValidationError('Please fill in all required fields');
-      return false;
-    }
-    if (!/\S+@\S+\.\S+/.test(email)) {
-      setValidationError('Please enter a valid email address');
-      return false;
-    }
-    if (password.length < 6) {
-      setValidationError('Password must be at least 6 characters');
-      return false;
-    }
-    return true;
-  };
-
-  const handleSubmit = async () => {
-    setValidationError('');
+  const handleLogin = async () => {
+    setLocalError('');
     clearError();
-    
-    if (!validateForm()) return;
-    
-    try {
-      if (isLogin) {
-        await login(email, password);
-      } else {
-        await register(email, password, name);
-      }
-      navigation.navigate('Main', { screen: 'Home' });
-    } catch (err) {
-      // Error is handled by the auth store
+    if (!email || !password) {
+      setLocalError('Please enter both email and password');
+      return;
     }
+    await login(email, password);
   };
 
   return (
@@ -74,16 +44,6 @@ const AuthScreen: React.FC = () => {
           <Text style={styles.subtitle}>Your daily surf companion</Text>
           
           <View style={styles.form}>
-            {!isLogin && (
-              <TextInput
-                style={styles.input}
-                placeholder="Name"
-                value={name}
-                onChangeText={setName}
-                autoCapitalize="words"
-              />
-            )}
-            
             <TextInput
               style={styles.input}
               placeholder="Email"
@@ -101,35 +61,20 @@ const AuthScreen: React.FC = () => {
               secureTextEntry
             />
             
-            {(validationError || error) && (
-              <Text style={styles.errorText}>
-                {validationError || error}
-              </Text>
+            {(localError || error) && (
+              <Text style={styles.errorText}>{localError || error}</Text>
             )}
             
             <TouchableOpacity 
               style={styles.button}
-              onPress={handleSubmit}
+              onPress={handleLogin}
               disabled={isLoading}
             >
               {isLoading ? (
                 <ActivityIndicator color={COLORS.white} />
               ) : (
-                <Text style={styles.buttonText}>
-                  {isLogin ? 'Sign In' : 'Create Account'}
-                </Text>
+                <Text style={styles.buttonText}>Sign In</Text>
               )}
-            </TouchableOpacity>
-            
-            <TouchableOpacity 
-              style={styles.switchButton}
-              onPress={() => setIsLogin(!isLogin)}
-            >
-              <Text style={styles.switchText}>
-                {isLogin 
-                  ? "Don't have an account? Create one" 
-                  : 'Already have an account? Sign in'}
-              </Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -186,13 +131,6 @@ const styles = StyleSheet.create({
     color: COLORS.white,
     fontSize: 16,
     fontWeight: 'bold',
-  },
-  switchButton: {
-    alignItems: 'center',
-  },
-  switchText: {
-    color: COLORS.primary,
-    fontSize: 14,
   },
   errorText: {
     color: COLORS.error,
