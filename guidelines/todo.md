@@ -24,12 +24,29 @@ This document maintains a running list of tasks, enhancements, bug fixes, and te
 ### Authentication
 
 - [X] Using a fake auth context for Expo Go development. Replace with real Firebase Auth integration before production or when moving to a custom dev client.
-- [ ] Implement user registration screen
-- [ ] Implement login screen
-- [ ] Set up authentication flow
+- [X] Implement user registration screen
+  - X Added registration form with name, email, and password fields
+  - X Implemented form validation
+  - X Added toggle between login and registration modes
+- [X] Implement login screen
+  - X Added email and password login
+  - X Implemented form validation
+  - X Added error handling and loading states
+- [X] Set up authentication flow
+  - X Implemented basic auth state management
+  - X Added navigation flow between auth and main app
 - [ ] Implement password reset
+  - [ ] Create forgot password screen
+  - [ ] Implement password reset email flow
+  - [ ] Add success/error handling
 - [ ] Add social media login options
+  - [X] Add UI for Google and Apple login buttons
+  - [ ] Implement Google OAuth integration
+  - [ ] Implement Apple Sign In integration
 - [ ] Add biometric authentication for app access
+  - [ ] Add biometric login option
+  - [ ] Implement secure storage for biometric credentials
+  - [ ] Add fallback to password login
 
 ### Surf Spot Features
 
