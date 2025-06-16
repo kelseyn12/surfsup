@@ -15,6 +15,7 @@ import LogSessionScreen from '../screens/LogSessionScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import SessionDetailsScreen from '../screens/SessionDetailsScreen';
 import AuthScreen from '../screens/AuthScreen';
+import ForgotPasswordScreen from '../screens/ForgotPasswordScreen';
 import { RootStackParamList, MainTabParamList } from './types';
 import OnBoardingScreen from '../screens/OnBoardingScreen';
 import { isOnboardingComplete } from '../services/storage';
@@ -106,7 +107,7 @@ const AppNavigator = () => {
       ref={navigationRef}
     >
       <Stack.Navigator 
-        initialRouteName={hasCompletedOnboarding ? (isAuthenticated ? 'Main' : 'Auth') : 'OnBoarding'}
+        initialRouteName={hasCompletedOnboarding ? (isAuthenticated ? 'Main' : 'AuthScreen') : 'OnBoarding'}
         screenOptions={{
           headerShown: false,
           animation: 'slide_from_right',
@@ -122,7 +123,7 @@ const AppNavigator = () => {
           />
         )}
         {hasCompletedOnboarding && !isAuthenticated && (
-          <Stack.Screen name="Auth" component={AuthScreen} />
+          <Stack.Screen name="AuthScreen" component={AuthScreen} />
         )}
         {hasCompletedOnboarding && isAuthenticated && (
           <Stack.Screen name="Main" component={MainTabNavigator} />
@@ -131,6 +132,7 @@ const AppNavigator = () => {
         <Stack.Screen name="LogSession" component={LogSessionScreen} />
         <Stack.Screen name="Settings" component={SettingsScreen} />
         <Stack.Screen name="SessionDetails" component={SessionDetailsScreen} />
+        <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

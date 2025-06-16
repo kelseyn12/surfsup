@@ -48,8 +48,7 @@ const AuthScreen: React.FC = () => {
   };
 
   const handleForgotPassword = () => {
-    // TODO: Implement forgot password flow
-    console.log('Forgot password pressed');
+    navigation.navigate('ForgotPassword');
   };
 
   const handleSocialLogin = (provider: string) => {

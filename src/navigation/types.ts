@@ -5,7 +5,7 @@ import type { SurfSpot } from '../types';
 
 // Main stack navigator params
 export type RootStackParamList = {
-  Auth: undefined;
+  AuthScreen: undefined;
   Main: NavigatorScreenParams<MainTabParamList>;
   SpotDetails: { spotId: string; spot?: SurfSpot };
   CheckIn: { spotId: string; spot?: SurfSpot };
@@ -15,6 +15,7 @@ export type RootStackParamList = {
   Settings: undefined;
   OnBoarding: undefined;
   Debug: undefined;
+  ForgotPassword: undefined;
 };
 
 // Bottom tab navigator params
